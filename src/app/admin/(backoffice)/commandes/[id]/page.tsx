@@ -47,6 +47,8 @@ const NOTICES: Record<string, string> = {
   depublie: "Résultats dépubliés.",
   fichier: "Fichier supprimé.",
   facture: "Facture régénérée.",
+  encaisse: "Encaissement constaté — la commande est marquée payée.",
+  impaye: "Encaissement manqué — la commande repart en attente de règlement.",
 };
 
 const ERRORS: Record<string, string> = {

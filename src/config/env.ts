@@ -24,7 +24,7 @@ const envSchema = z.object({
 
   PAYMENT_PROVIDERS: z
     .string()
-    .default("manual")
+    .default("manual,cod")
     .transform((v) => v.split(",").map((s) => s.trim()).filter(Boolean)),
   PAYMENT_MANUAL_IBAN: z.string().default(""),
   PAYMENT_MANUAL_BANK: z.string().default(""),

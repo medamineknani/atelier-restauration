@@ -437,12 +437,22 @@ def main() -> int:
 
     page = get("/admin/parametres?section=paiement", ADMIN_JAR)
     iban_before = field_value(page, "manualIban")
+
+    # Le formulaire de paiement porte aussi le contre-remboursement : une case
+    # absente le désactive. On renvoie donc les valeurs lues, sinon ce test
+    # éteindrait une fonctionnalité qu'il ne cherche pas à modifier.
+    def cod_fields(page: str) -> dict[str, str]:
+        checked = re.search(r'name="codEnabled"[^>]*checked', page) is not None
+        return {"codEnabled": "on" if checked else "", "codMax": field_value(page, "codMax")}
+
     iban_marker = f"TN59 0000 0000 0000 0000 {int(time.time()) % 10000:04d}"
+    cod = cod_fields(page)
     save("paiement", 'name="manualIban"', {
         "manualHolder": "Atelier Restauration",
         "manualBank": "Banque de test",
         "manualIban": iban_marker,
         "providerOrder": "manual",
+        **cod,
     })
     check("IBAN enregistré",
           iban_marker in field_value(get("/admin/parametres?section=paiement", ADMIN_JAR),
@@ -452,6 +462,7 @@ def main() -> int:
         "manualBank": "Banque de test",
         "manualIban": iban_before,
         "providerOrder": "manual",
+        **cod,
     })
 
     page = get("/admin/parametres?section=stockage", ADMIN_JAR)

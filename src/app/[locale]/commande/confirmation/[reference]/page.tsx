@@ -7,7 +7,6 @@ import { site } from "@/config/site";
 import { getOrderByReference, getOrderWithItems, verifyGuestToken } from "@/server/services/orders";
 import { listOriginals } from "@/server/services/assets";
 import { getCurrentUser } from "@/lib/auth/session";
-import { defaultPaymentDriver } from "@/lib/payments";
 import { formatDate, priceLabel } from "@/lib/utils";
 import type { Order } from "@/server/db/schema";
 import { Container, Eyebrow, Section } from "@/components/ui/primitives";
@@ -235,13 +234,31 @@ function Row({
   );
 }
 
-/** Coordonnées de règlement fournies par le moyen de paiement retenu. */
+/**
+ * Coordonnées de règlement fournies par le moyen de paiement retenu.
+ *
+ * Le pilote est relu depuis la ligne de paiement de la commande, et non
+ * depuis le moyen par défaut : un client qui a choisi le paiement à la
+ * livraison doit lire « préparez l'appoint », pas un IBAN.
+ */
 async function paymentInstructions(
   order: Order,
   locale: Locale,
 ): Promise<{ label: string; value: string }[]> {
   try {
-    const driver = defaultPaymentDriver();
+    const { getPaymentDriver, defaultPaymentDriver } = await import("@/lib/payments");
+    const { db } = await import("@/server/db");
+    const { payments } = await import("@/server/db/schema");
+    const { desc, eq } = await import("drizzle-orm");
+
+    const rows = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.orderId, order.id))
+      .orderBy(desc(payments.createdAt))
+      .limit(1);
+
+    const driver = (rows[0] ? getPaymentDriver(rows[0].provider) : null) ?? defaultPaymentDriver();
     const result = await driver.start({
       order,
       locale,

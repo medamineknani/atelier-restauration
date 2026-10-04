@@ -264,7 +264,19 @@ export async function confirmOrder(formData: FormData) {
     redirect(localePath(locale, "/commande/photos"));
   }
 
-  await submitOrder(orderId, provider);
+  // Le contre-remboursement n'est pas toujours acceptable : commande sans
+  // colis à livrer, ou montant au-delà du plafond. Le formulaire ne le
+  // propose pas dans ce cas, mais le choix vient du navigateur.
+  try {
+    await submitOrder(orderId, provider);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "";
+    if (reason === "COD_UNAVAILABLE" || reason === "COD_OVER_LIMIT") {
+      redirect(localePath(locale, `/commande/recapitulatif?reglement=${reason.toLowerCase()}`));
+    }
+    throw error;
+  }
+
   const token = await issueGuestToken(orderId);
 
   // Confirmation par email.

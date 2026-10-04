@@ -1,6 +1,7 @@
 import { env } from "@/config/env";
 import type { PaymentDriver } from "./types";
 import { manualDriver } from "./manual";
+import { codDriver } from "./cod";
 
 export type { PaymentDriver, PaymentInstructions, PaymentStartResult, WebhookEvent } from "./types";
 
@@ -12,7 +13,7 @@ export type { PaymentDriver, PaymentInstructions, PaymentStartResult, WebhookEve
  * d'environnement, sans redéploiement de code, et la désactiver en une seconde
  * si le prestataire est indisponible.
  */
-const registry: PaymentDriver[] = [manualDriver];
+const registry: PaymentDriver[] = [manualDriver, codDriver];
 
 export function listPaymentDrivers(): PaymentDriver[] {
   const enabled = new Set(env.PAYMENT_PROVIDERS);
@@ -29,3 +30,9 @@ export function getPaymentDriver(id: string): PaymentDriver | null {
 export function defaultPaymentDriver(): PaymentDriver {
   return listPaymentDrivers()[0] ?? manualDriver;
 }
+
+export function isCodDriver(driver: Pick<PaymentDriver, "id">): boolean {
+  return driver.id === codDriver.id;
+}
+
+export { codDriver };

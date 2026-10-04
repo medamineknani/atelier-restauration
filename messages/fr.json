@@ -373,7 +373,7 @@
     "noPhotosYet": "Aucune photo envoyée pour le moment",
     "payCta": "Confirmer ma commande",
     "manualTitle": "Paiement différé",
-    "manualBody": "Vous réglez par virement bancaire, en espèces à l'atelier, ou à la livraison. Nous vous envoyons les instructions et nous attendons votre règlement pour commencer.",
+    "manualBody": "Vous réglez par virement bancaire ou en espèces à l'atelier. Nous vous envoyons les instructions et nous attendons votre règlement pour commencer.",
     "manualIban": "IBAN",
     "manualBank": "Banque",
     "manualReference": "Indiquez votre numéro de commande en motif du virement.",
@@ -425,7 +425,14 @@
     "addMoreLater": "Vous pourrez en ajouter plus tard depuis votre espace.",
     "manualHolder": "Titulaire du compte",
     "payNow": "Payer maintenant",
-    "onlineUnavailable": "Le paiement en ligne arrive bientôt. Vous pouvez régler à la livraison ou par virement."
+    "onlineUnavailable": "Le paiement en ligne arrive bientôt. Vous pouvez régler à la livraison ou par virement.",
+    "codTitle": "Paiement à la livraison",
+    "codBody": "Vous réglez en main propre au moment où le colis vous est remis. Nous commençons le travail immédiatement, sans attendre de règlement.",
+    "codAmountToPrepare": "Montant à préparer",
+    "codNote": "Préparez l'appoint : le livreur peut ne pas avoir de monnaie.",
+    "codUnavailable": "Le paiement à la livraison concerne les commandes livrées. Cette commande est remise en téléchargement.",
+    "codMaxNotice": "Plafonné à {max} par colis.",
+    "codOverLimit": "Le paiement à la livraison est plafonné à {max}. Choisissez un autre moyen de règlement pour cette commande."
   },
   "account": {
     "title": "Mon espace",
@@ -667,7 +674,7 @@
     "on": "activées",
     "off": "désactivées",
     "tabs": "Onglets de la commande",
-    "paymentProvider": "Paiement",
+    "paymentProvider": "Moyen de règlement",
     "paymentNone": "Aucun paiement enregistré",
     "paidOn": "Payée le {date}",
     "createdOn": "Créée le {date}",
@@ -705,7 +712,14 @@
     },
     "pairingCovered": "{covered} / {total} originaux couverts",
     "retry": "Réessayer",
-    "publishHint": "La publication fait franchir les étapes restantes (traitement, restauration, vérification) puis met la commande à « prête »."
+    "publishHint": "La publication fait franchir les étapes restantes (traitement, restauration, vérification) puis met la commande à « prête ».",
+    "codToCollect": "À encaisser à la livraison",
+    "codCollected": "Encaissé à la livraison",
+    "codRefused": "Encaissement manqué",
+    "codCollectConfirm": "Confirmer l'encaissement de {amount} à la livraison ?",
+    "codRefuseConfirm": "Déclarer l'encaissement manqué ? La commande repart en attente de règlement.",
+    "paymentCodEnabled": "Paiement à la livraison",
+    "codMax": "Plafond par colis (DT)"
   },
   "a11y": {
     "beforeAfterSlider": "Curseur de comparaison entre la photo originale et la photo restaurée",

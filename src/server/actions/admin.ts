@@ -17,7 +17,13 @@ import {
 import { createSession, destroySession } from "@/lib/auth/session";
 import { currentAdmin } from "@/lib/auth/admin";
 import { logAudit } from "@/server/services/audit";
-import { ALLOWED_TRANSITIONS, changeStatus, getOrderById } from "@/server/services/orders";
+import {
+  ALLOWED_TRANSITIONS,
+  changeStatus,
+  getOrderById,
+  markCodCollected as markCodPayment,
+  markCodRefused as markCodFailure,
+} from "@/server/services/orders";
 import { signInWithPassword } from "@/server/services/accounts";
 import { issueGuestToken } from "@/server/services/orders";
 import { ensureInvoice } from "@/server/services/accounts";
@@ -354,6 +360,46 @@ export async function regenerateInvoice(formData: FormData) {
 
   revalidatePath(`/admin/commandes/${orderId}`);
   redirect(`/admin/commandes/${orderId}?ok=facture`);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Contre-remboursement                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Constate l'encaissement à la livraison.
+ *
+ * L'opérateur qui réceptionne le bordereau du transporteur a besoin d'un seul
+ * geste, et d'une trace : c'est ce qui déclenche la date de paiement, donc la
+ * facture et les indicateurs de l'atelier.
+ */
+export async function markCodCollected(formData: FormData) {
+  const admin = await currentAdmin();
+  if (!admin) redirect("/admin/connexion");
+
+  const orderId = z.string().uuid().parse(formData.get("orderId"));
+  const order = await getOrderById(orderId);
+  if (!order) redirect("/admin/commandes");
+
+  await markCodPayment(orderId, { id: admin.id, email: admin.email });
+
+  revalidatePath(`/admin/commandes/${orderId}`);
+  redirect(`/admin/commandes/${orderId}?onglet=facture&ok=encaisse`);
+}
+
+/** Colis refusé, client absent : l'argent n'est pas rentré. */
+export async function markCodRefused(formData: FormData) {
+  const admin = await currentAdmin();
+  if (!admin) redirect("/admin/connexion");
+
+  const orderId = z.string().uuid().parse(formData.get("orderId"));
+  const order = await getOrderById(orderId);
+  if (!order) redirect("/admin/commandes");
+
+  await markCodFailure(orderId, { id: admin.id, email: admin.email });
+
+  revalidatePath(`/admin/commandes/${orderId}`);
+  redirect(`/admin/commandes/${orderId}?onglet=facture&ok=impaye`);
 }
 
 /* -------------------------------------------------------------------------- */

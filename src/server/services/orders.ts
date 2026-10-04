@@ -18,6 +18,8 @@ import type { Locale } from "@/lib/i18n";
 import { addBusinessDays } from "@/lib/utils";
 import { getProductById, getSetting } from "./catalog";
 import { computeOrder, type OrderLineInput } from "./pricing";
+import { isCodDriver } from "@/lib/payments";
+import { logAudit } from "./audit";
 import { sha256, randomToken } from "@/lib/crypto";
 
 /* -------------------------------------------------------------------------- */
@@ -293,9 +295,58 @@ export async function verifyGuestToken(order: Order, token: string) {
   return true;
 }
 
+/**
+ * Une commande est livrée si l'un de ses éléments l'exige — un photobook, ou
+ * une restauration remise sur support physique.
+ *
+ * C'est ce qui rend le paiement à la livraison possible : sans colis, il n'y
+ * a rien contre quoi remettre l'argent.
+ */
+export async function orderRequiresShipping(orderId: string): Promise<boolean> {
+  const items = await db
+    .select({ meta: orderItems.meta })
+    .from(orderItems)
+    .where(eq(orderItems.orderId, orderId));
+
+  return items.some(
+    (item) => (item.meta as { requiresShipping?: boolean } | null)?.requiresShipping === true,
+  );
+}
+
+/**
+ * Vérifie qu'un moyen de règlement est acceptable pour cette commande.
+ *
+ * Le formulaire ne propose déjà que les moyens valides, mais le choix arrive
+ * du navigateur : il est revérifié ici.
+ */
+export async function assertPaymentAllowed(
+  orderId: string,
+  provider: string,
+): Promise<void> {
+  if (!isCodDriver({ id: provider })) return;
+
+  if (!(await orderRequiresShipping(orderId))) {
+    throw new Error("COD_UNAVAILABLE");
+  }
+
+  const limit = await getSetting<number>("payment_cod_max_millimes", 0);
+  const order = await getOrderById(orderId);
+  if (limit > 0 && order && order.totalMillimes > limit) {
+    throw new Error("COD_OVER_LIMIT");
+  }
+}
+
+/**
+ * Bascule la commande du brouillon à la commande.
+ *
+ * Le statut d'arrivée dépend du moyen de règlement : un virement attend les
+ * fonds, un paiement à la livraison n'attend rien.
+ */
 export async function submitOrder(orderId: string, provider: string) {
   const order = await getOrderById(orderId);
   if (!order) throw new Error("Commande introuvable");
+
+  await assertPaymentAllowed(orderId, provider);
 
   await db
     .update(orders)
@@ -310,8 +361,77 @@ export async function submitOrder(orderId: string, provider: string) {
     status: "pending",
   });
 
-  await changeStatus(orderId, "awaiting_payment", { actorId: null, notify: false });
+  const isCod = isCodDriver({ id: provider });
+
+  await changeStatus(orderId, isCod ? "received" : "awaiting_payment", {
+    actorId: null,
+    notify: false,
+    // Contre-remboursement : la commande est reçue, mais rien n'est encaissé.
+    markPaid: !isCod,
+  });
+
   return getOrderById(orderId);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Contre-remboursement                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Constate l'encaissement à la livraison.
+ *
+ * C'est le seul endroit qui renseigne `paidAt` pour une commande en
+ * contre-remboursement : la date de paiement doit être celle de la remise du
+ * colis, pas celle de la commande.
+ */
+export async function markCodCollected(
+  orderId: string,
+  actor: { id: string; email: string },
+): Promise<void> {
+  const now = new Date();
+
+  await db
+    .update(payments)
+    .set({ status: "succeeded", updatedAt: now })
+    .where(and(eq(payments.orderId, orderId), eq(payments.provider, "cod")));
+
+  await db
+    .update(orders)
+    .set({ paidAt: now, updatedAt: now })
+    .where(and(eq(orders.id, orderId), isNull(orders.paidAt)));
+
+  await logAudit({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "payment.cod_collected",
+    entityType: "order",
+    entityId: orderId,
+    metadata: { at: now.toISOString() },
+  });
+}
+
+/** Colis refusé ou client absent : on repart chercher l'argent. */
+export async function markCodRefused(
+  orderId: string,
+  actor: { id: string; email: string },
+): Promise<void> {
+  await db
+    .update(payments)
+    .set({ status: "failed", failureReason: "refusé à la livraison", updatedAt: new Date() })
+    .where(and(eq(payments.orderId, orderId), eq(payments.provider, "cod")));
+
+  await db
+    .update(orders)
+    .set({ paidAt: null, updatedAt: new Date() })
+    .where(eq(orders.id, orderId));
+
+  await logAudit({
+    actorId: actor.id,
+    actorEmail: actor.email,
+    action: "payment.cod_refused",
+    entityType: "order",
+    entityId: orderId,
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -326,14 +446,19 @@ export async function submitOrder(orderId: string, provider: string) {
  * invalider la machine à états d'un clic distrait.
  */
 export const ALLOWED_TRANSITIONS: Record<OrderStatusCode, OrderStatusCode[]> = {
-  draft: ["awaiting_payment", "cancelled"],
+  // `received` est atteignable depuis `draft` pour le paiement à la livraison :
+  // il n'y a aucun règlement à attendre, la commande entre directement en
+  // production. Toute autre soumission passe par `awaiting_payment`.
+  draft: ["awaiting_payment", "received", "cancelled"],
   awaiting_payment: ["received", "cancelled", "on_hold"],
   received: ["processing", "on_hold", "cancelled", "refunded"],
   processing: ["restoring", "on_hold", "cancelled"],
   restoring: ["checking", "on_hold"],
   checking: ["ready", "restoring"],
   ready: ["shipped", "completed", "on_hold"],
-  shipped: ["completed"],
+  // `on_hold` après expédition : un colis refusé ou un encaissement manqué
+  // doit pouvoir être mis de côté sans passer pour terminé.
+  shipped: ["completed", "on_hold"],
   completed: [],
   on_hold: ["received", "processing", "restoring", "checking", "ready", "cancelled"],
   cancelled: [],
@@ -352,6 +477,12 @@ export async function changeStatus(
     message?: string | null;
     notify?: boolean;
     visibleToClient?: boolean;
+    /**
+     * `received` vaut normalement « nous avons l'argent, le travail commence ».
+     * Le paiement à la livraison fait exception : la commande est reçue, mais
+     * l'encaissement n'aura lieu qu'à la remise du colis.
+     */
+    markPaid?: boolean;
     tracking?: { carrier?: string; trackingNumber?: string } | null;
   } = {},
 ) {
@@ -362,13 +493,14 @@ export async function changeStatus(
   }
 
   const from = order.status;
+  const markPaid = options.markPaid ?? true;
 
   await db
     .update(orders)
     .set({
       status: to,
       updatedAt: new Date(),
-      paidAt: to === "received" && !order.paidAt ? new Date() : order.paidAt,
+      paidAt: to === "received" && markPaid && !order.paidAt ? new Date() : order.paidAt,
       completedAt: to === "completed" ? new Date() : order.completedAt,
       shippingCarrier: options.tracking?.carrier ?? order.shippingCarrier,
       shippingTracking: options.tracking?.trackingNumber ?? order.shippingTracking,

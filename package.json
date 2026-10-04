@@ -16,12 +16,14 @@
     "e2e": "python3 scripts/e2e-checkout.py",
     "e2e:admin": "python3 scripts/e2e-admin.py",
     "e2e:compte": "python3 scripts/e2e-compte.py",
+    "e2e:cod": "python3 scripts/e2e-cod.py",
     "gallery": "tsx scripts/build-gallery.ts",
     "images": "tsx scripts/build-public-images.ts",
     "lint": "eslint .",
     "start": "next start",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e:all": "npm run e2e && npm run e2e:compte && npm run e2e:admin && npm run e2e:cod"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.8",

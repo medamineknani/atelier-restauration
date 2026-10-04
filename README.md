@@ -20,8 +20,12 @@ données et design system sont documentés et validés.
 | M3    | Espace client : lien magique, suivi, résultats, factures     | ✔ livré   |
 | M4-a  | Back-office : file de production, écran de commande, catalogue | ✔ livré   |
 | M4-b  | Back-office : contenu, paramètres, équipe                     | ✔ livré   |
-| M5    | Paiement en ligne (Konnect / Flouci / D17)                   | ☐ à venir |
+| M5    | Paiement à la livraison (contre-remboursement)                | ✔ livré   |
 | M6    | Qualification : tests, accessibilité, performance, SEO       | ☐ à venir |
+
+Le paiement en ligne (Konnect, Flouci, D17) n'est pas entrepris : le marché
+tunisien reste majoritairement au paiement à la livraison et au virement, et
+l'abstraction est déjà en place pour l'ajouter sans toucher au tunnel.
 
 ---
 
@@ -95,6 +99,8 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
 | `npm run e2e`           | Parcours de commande complet, sans navigateur           |
 | `npm run e2e:compte`    | Espace client : lien magique, rattachement, facture...  |
 | `npm run e2e:admin`     | Back-office : commande, catalogue, contenu, réglages    |
+| `npm run e2e:cod`       | Paiement à la livraison : éligibilité, encaissement     |
+| `npm run e2e:all`       | Les quatre parcours, à la suite                         |
 
 ### Trois précautions locales
 
@@ -228,6 +234,35 @@ Les coordonnées de marque alimentent le pied de page, la page Contact, la
 facture, la signature des emails et les données structurées : ce que l'atelier
 saisit est ce que le site affiche, et ce que les moteurs lisent.
 
+### Paiement à la livraison
+
+Le contre-remboursement n'est pas une variante du virement : c'est le seul
+moyen de règlement où l'atelier **avance le travail avant d'être payé**. Trois
+conséquences, toutes vérifiées par `npm run e2e:cod` :
+
+1. **Il n'est proposé que là où un colis sera livré.** Sans expédition, il n'y
+   a rien contre quoi remettre l'argent. Le contrôle est serveur : forcer le
+   champ ne passe pas.
+2. **La commande démarre aussitôt.** Elle entre directement en production au
+   lieu d'attendre dans « en attente de paiement » — il n'y a rien à attendre.
+3. **`paidAt` reste vide jusqu'à l'encaissement.** La date de paiement est
+   celle de la remise du colis, constatée par l'atelier depuis l'onglet
+   Facture. C'est elle qui déclenche la facture et les indicateurs.
+
+Deux garde-fous : un plafond par colis, au-delà duquel le moyen n'est plus
+proposé (les transporteurs plafonnent le contre-remboursement), et la
+possibilité de déclarer un encaissement manqué — colis refusé, client absent —
+sans perdre la commande.
+
+Un colis refusé peut être mis en attente (`shipped → on_hold`) : sans cette
+transition, une commande expédiée ne pouvait plus redevenir qu'« expédiée » ou
+« terminée ».
+
+Le paiement en ligne n'est pas entrepris. L'abstraction est prête : un
+prestataire est un pilote qui implémente `PaymentDriver` et se déclare dans le
+registre, activé par `PAYMENT_PROVIDERS`. Rien de plus, ni route ni branche
+dans le tunnel.
+
 ### Webhook de paiement
 
 Une seule route sert tous les prestataires :
@@ -246,6 +281,8 @@ pour qu'un prestataire qui réessaie en boucle ne finisse pas par nous noyer.
 Voir la section « Questions ouvertes » du document de synthèse, et les arbitrages à confirmer avant le jalon M0 :
 
 - nom définitif de la marque ;
-- provider(s) de paiement à connecter en premier ;
+- transporteur et frais de contre-remboursement : facturés au client ou
+  absorbés ? C'est une colonne à ajouter à la commande, ce n'est pas fait ;
+- plafond de contre-remboursement pratiqué par le transporteur retenu ;
 - hébergeur et stockage cibles ;
 - tarifs des trois extras numériques (proposés : 4 / 25 / 15 DT).

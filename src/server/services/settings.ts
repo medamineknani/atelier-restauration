@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { inArray, sql } from "drizzle-orm";
 
 import { site } from "@/config/site";
@@ -17,15 +18,29 @@ import { settings } from "@/server/db/schema";
  * réglage ne demande aucune migration, et la lecture reste un seul `SELECT`
  * même quand une section en compte quinze.
  */
-async function readMany<T extends Record<string, unknown>>(keys: string[]): Promise<T> {
+/**
+ * Une lecture de réglage ne doit jamais faire échouer une page.
+ *
+ * Les coordonnées de l'atelier habillent le pied de page : si la base est
+ * momentanément indisponible, le site doit s'afficher avec les valeurs par
+ * défaut, pas renvoyer une erreur. On journalise et on continue.
+ */
+async function readMany<T extends Record<string, unknown>>(
+  keys: string[],
+): Promise<T> {
   if (keys.length === 0) return {} as T;
-  const rows = await db
-    .select({ key: settings.key, value: settings.value })
-    .from(settings)
-    .where(inArray(settings.key, keys));
-  const out: Record<string, unknown> = {};
-  for (const row of rows) out[row.key] = row.value;
-  return out as T;
+  try {
+    const rows = await db
+      .select({ key: settings.key, value: settings.value })
+      .from(settings)
+      .where(inArray(settings.key, keys));
+    const out: Record<string, unknown> = {};
+    for (const row of rows) out[row.key] = row.value;
+    return out as T;
+  } catch (error) {
+    console.error("[settings] lecture impossible, valeurs par défaut", error);
+    return {} as T;
+  }
 }
 
 function str(value: unknown, fallback: string): string {
@@ -90,7 +105,7 @@ const BRAND_KEYS = [
  * renseigné en base prend le dessus. Une base vide redonne donc exactement le
  * site livré — aucun réglage n'est indispensable au démarrage.
  */
-export async function getBrandSettings(): Promise<BrandSettings> {
+export const getBrandSettings = cache(async (): Promise<BrandSettings> => {
   const raw = await readMany<Record<string, unknown>>(BRAND_KEYS);
   const phone = str(raw.brand_phone, site.phone);
   return {
@@ -108,7 +123,7 @@ export async function getBrandSettings(): Promise<BrandSettings> {
     instagram: str(raw.brand_instagram, site.social.instagram),
     facebook: str(raw.brand_facebook, site.social.facebook),
   };
-}
+});
 
 /* -------------------------------------------------------------------------- */
 /* Commercial                                                                  */
@@ -129,7 +144,7 @@ const COMMERCIAL_KEYS = [
   "accepted_formats",
 ];
 
-export async function getCommercialSettings(): Promise<CommercialSettings> {
+export const getCommercialSettings = cache(async (): Promise<CommercialSettings> => {
   const raw = await readMany<Record<string, unknown>>(COMMERCIAL_KEYS);
   return {
     shippingFlatMillimes: num(raw.shipping_flat_millimes, 0),
@@ -141,7 +156,7 @@ export async function getCommercialSettings(): Promise<CommercialSettings> {
       "image/tiff",
     ]),
   };
-}
+});
 
 /* -------------------------------------------------------------------------- */
 /* Paiement                                                                    */
@@ -154,6 +169,10 @@ export type PaymentSettings = {
   manualIban: string;
   /** Ordre d'affichage des moyens de paiement. */
   providerOrder: string[];
+  /** Contre-remboursement proposé au client. */
+  codEnabled: boolean;
+  /** Plafond par colis, en millimes. `0` = pas de plafond. */
+  codMaxMillimes: number;
 };
 
 const PAYMENT_KEYS = [
@@ -161,17 +180,21 @@ const PAYMENT_KEYS = [
   "payment_manual_bank",
   "payment_manual_iban",
   "payment_provider_order",
+  "payment_cod_enabled",
+  "payment_cod_max_millimes",
 ];
 
-export async function getPaymentSettings(): Promise<PaymentSettings> {
+export const getPaymentSettings = cache(async (): Promise<PaymentSettings> => {
   const raw = await readMany<Record<string, unknown>>(PAYMENT_KEYS);
   return {
     manualHolder: str(raw.payment_manual_holder, "Atelier Restauration"),
     manualBank: str(raw.payment_manual_bank, ""),
     manualIban: str(raw.payment_manual_iban, ""),
     providerOrder: strArray(raw.payment_provider_order, ["manual"]),
+    codEnabled: bool(raw.payment_cod_enabled, true),
+    codMaxMillimes: num(raw.payment_cod_max_millimes, 0),
   };
-}
+});
 
 /* -------------------------------------------------------------------------- */
 /* Stockage & rétention                                                        */
@@ -193,7 +216,7 @@ const STORAGE_KEYS = [
   "retention_draft_days",
 ];
 
-export async function getStorageSettings(): Promise<StorageSettings> {
+export const getStorageSettings = cache(async (): Promise<StorageSettings> => {
   const raw = await readMany<Record<string, unknown>>(STORAGE_KEYS);
   return {
     maxFileSizeBytes: num(raw.max_file_size_bytes, 60 * 1024 * 1024),
@@ -202,7 +225,7 @@ export async function getStorageSettings(): Promise<StorageSettings> {
     retentionRestoredDays: num(raw.retention_restored_days, 365),
     retentionDraftDays: num(raw.retention_draft_days, 30),
   };
-}
+});
 
 /* -------------------------------------------------------------------------- */
 /* Écriture                                                                    */

@@ -373,7 +373,7 @@
     "noPhotosYet": "No photograph sent yet",
     "payCta": "Confirm my order",
     "manualTitle": "Deferred payment",
-    "manualBody": "Pay by bank transfer, in cash at the workshop, or on delivery. We send you the instructions and start once payment is received.",
+    "manualBody": "You pay by bank transfer or in cash at the workshop. We send you the details and start once your payment has arrived.",
     "manualIban": "IBAN",
     "manualBank": "Bank",
     "manualReference": "Please quote your order number as the transfer reference.",
@@ -425,7 +425,14 @@
     "addMoreLater": "You can add more later from your account.",
     "manualHolder": "Account holder",
     "payNow": "Pay now",
-    "onlineUnavailable": "Online payment is coming soon. You can pay on delivery or by bank transfer."
+    "onlineUnavailable": "Online payment is coming soon. You can pay on delivery or by bank transfer.",
+    "codTitle": "Cash on delivery",
+    "codBody": "You pay in person when the parcel is handed to you. We start the work straight away, without waiting for payment.",
+    "codAmountToPrepare": "Amount to prepare",
+    "codNote": "Please have the exact amount ready: the courier may not carry change.",
+    "codUnavailable": "Cash on delivery applies to orders that are shipped. This one is delivered by download.",
+    "codMaxNotice": "Capped at {max} per parcel.",
+    "codOverLimit": "Cash on delivery is capped at {max}. Please choose another payment method for this order."
   },
   "account": {
     "title": "My account",
@@ -705,7 +712,14 @@
     },
     "pairingCovered": "{covered} / {total} originals covered",
     "retry": "Retry",
-    "publishHint": "Publishing moves the order through the remaining steps and then marks it as ready."
+    "publishHint": "Publishing moves the order through the remaining steps and then marks it as ready.",
+    "codToCollect": "To be collected on delivery",
+    "codCollected": "Collected on delivery",
+    "codRefused": "Collection failed",
+    "codCollectConfirm": "Confirm collection of {amount} on delivery?",
+    "codRefuseConfirm": "Report a failed collection? The order goes back to awaiting payment.",
+    "paymentCodEnabled": "Cash on delivery",
+    "codMax": "Cap per parcel (TND)"
   },
   "a11y": {
     "beforeAfterSlider": "Comparison slider between the original and the restored photograph",

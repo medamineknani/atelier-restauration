@@ -30,6 +30,7 @@ const COPY: Record<Locale, Record<string, string>> = {
     discount: "Remise",
     totalDue: "Total TTC",
     paid: "Payée le",
+    unpaid: "À régler à la livraison du colis.",
     vat: "Montants exprimés en dinars tunisiens (TND).",
     thanks:
       "Merci de votre confiance. Vos photographies sont traitées une par une, à la main, dans notre atelier à Tunis.",
@@ -51,6 +52,7 @@ const COPY: Record<Locale, Record<string, string>> = {
     discount: "Discount",
     totalDue: "Total incl. tax",
     paid: "Paid on",
+    unpaid: "Payable on delivery of the parcel.",
     vat: "Amounts in Tunisian dinars (TND).",
     thanks:
       "Thank you for your trust. Every photograph is restored by hand, one at a time, in our workshop in Tunis.",
@@ -72,6 +74,7 @@ const COPY: Record<Locale, Record<string, string>> = {
     discount: "خصم",
     totalDue: "المجموع",
     paid: "تاريخ الدفع",
+    unpaid: "تُسدّد عند تسليم الطرد.",
     vat: "المبالغ بالدينار التونسي (TND).",
     thanks: "شكراً لثقتكم. تتم معالجة صوركم واحدة تلو الأخرى، يدوياً، في ورشتنا بتونس.",
     print: "طباعة",
@@ -227,6 +230,7 @@ export async function renderInvoiceHtml(input: {
     </section>
 
     <footer>
+      ${order.paidAt ? "" : `${c.unpaid}<br />`}
       ${c.vat}<br />
       ${c.thanks}
     </footer>

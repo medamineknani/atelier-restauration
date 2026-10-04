@@ -5,7 +5,9 @@ import { buildMetadata } from "@/lib/seo";
 import { abandonDraft, confirmOrder } from "@/server/actions/checkout";
 import { currentDraft } from "@/server/services/checkout-session";
 import { listOriginals } from "@/server/services/assets";
-import { listPaymentDrivers } from "@/lib/payments";
+import { isCodDriver, listPaymentDrivers } from "@/lib/payments";
+import { orderRequiresShipping } from "@/server/services/orders";
+import { getPaymentSettings } from "@/server/services/settings";
 import { priceLabel } from "@/lib/utils";
 import { StepShell } from "@/components/shop/step-shell";
 import { OrderSummary } from "@/components/shop/order-summary";
@@ -37,18 +39,37 @@ export async function generateMetadata({
  * modifiable d'un lien, parce qu'une commande confirmée par erreur coûte plus
  * cher à rattraper qu'un allers-retours de plus.
  */
+const PAYMENT_ERRORS: Record<string, string> = {
+  cod_unavailable: "checkout.codUnavailable",
+  cod_over_limit: "checkout.codOverLimit",
+};
+
 export default async function RecapStepPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ reglement?: string }>;
 }) {
   const { locale } = (await params) as { locale: Locale };
+  const query = await searchParams;
   const t = createTranslator(locale);
 
   const order = await currentDraft(locale);
   const originals = await listOriginals(order.id);
-  const drivers = listPaymentDrivers();
   const customer = order.customerSnapshot;
+
+  // Le paiement à la livraison suppose un colis : sans expédition, il n'y a
+  // rien contre quoi remettre l'argent.
+  const requiresShipping = await orderRequiresShipping(order.id);
+  const { codEnabled, codMaxMillimes: codMax } = await getPaymentSettings();
+  const codOverLimit = codMax > 0 && order.totalMillimes > codMax;
+  const codAllowed = codEnabled && requiresShipping && !codOverLimit;
+
+  const drivers = listPaymentDrivers().filter(
+    (driver) => !isCodDriver(driver) || codAllowed,
+  );
+  const codRefused = codEnabled && !codAllowed;
 
   return (
     <StepShell
@@ -134,6 +155,15 @@ export default async function RecapStepPage({
             {t("checkout.paymentMethodTitle")}
           </h2>
 
+          {query.reglement && PAYMENT_ERRORS[query.reglement] ? (
+            <p className="mb-6 rounded-sm border border-danger/40 bg-danger/5 px-4 py-3 text-[0.875rem] text-ink">
+              {t(
+                PAYMENT_ERRORS[query.reglement] as "checkout.codUnavailable",
+                codMax > 0 ? { max: priceLabel(codMax, locale) } : {},
+              )}
+            </p>
+          ) : null}
+
           <form action={confirmOrder} className="mt-6">
             <input type="hidden" name="locale" value={locale} />
 
@@ -157,10 +187,23 @@ export default async function RecapStepPage({
                     <span className="mt-2 block text-[0.875rem] leading-relaxed text-stone">
                       {t(driver.descriptionKey)}
                     </span>
+                    {isCodDriver(driver) && codMax > 0 ? (
+                      <span className="mt-2 block text-[0.75rem] text-muted">
+                        {t("checkout.codMaxNotice", { max: priceLabel(codMax, locale) })}
+                      </span>
+                    ) : null}
                   </span>
                 </label>
               ))}
             </div>
+
+            {codRefused ? (
+              <p className="mt-6 text-[0.8125rem] leading-relaxed text-muted">
+                {codOverLimit
+                  ? t("checkout.codMaxNotice", { max: priceLabel(codMax, locale) })
+                  : t("checkout.codUnavailable")}
+              </p>
+            ) : null}
 
             <div className="mt-8 flex flex-col gap-5">
               <SubmitButton

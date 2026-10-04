@@ -699,7 +699,10 @@ async function main() {
     { key: "retention_restored_days", value: 365 },
     { key: "retention_draft_days", value: 30 },
     { key: "accepted_formats", value: ["image/jpeg", "image/png", "image/webp", "image/tiff"] },
-    { key: "payment_providers", value: ["manual"] },
+    { key: "payment_providers", value: ["manual", "cod"] },
+    // Contre-remboursement : désactivable, et plafonné à 0 = pas de plafond.
+    { key: "payment_cod_enabled", value: true },
+    { key: "payment_cod_max_millimes", value: 0 },
     // Coordonnées de règlement — éditables depuis le back-office.
     { key: "payment_manual_holder", value: "Atelier Restauration" },
     { key: "payment_manual_bank", value: "À renseigner depuis le back-office" },

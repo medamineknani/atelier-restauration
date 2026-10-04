@@ -370,7 +370,7 @@ export default async function AdminSettingsPage({
             </div>
           </Panel>
 
-          <Panel title="Règlement hors ligne (virement, espèces, paiement à la livraison)">
+          <Panel title="Règlement hors ligne (virement, espèces)">
             <form action={savePaymentSettings} className="grid gap-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
@@ -400,6 +400,35 @@ export default async function AdminSettingsPage({
                 disabled={locked}
                 hint="Identifiants séparés par des virgules."
               />
+              <div className="border-t border-line pt-4">
+                <h3 className="text-[0.8125rem] text-ink">Contre-remboursement</h3>
+                <label className="mt-3 flex items-start gap-3 rounded-sm border border-line bg-sand/40 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    name="codEnabled"
+                    defaultChecked={payment.codEnabled}
+                    disabled={locked}
+                    className="mt-0.5"
+                  />
+                  <span className="text-[0.8125rem] text-ink">
+                    Proposer le paiement à la livraison
+                    <span className="mt-1 block text-[0.75rem] text-muted">
+                      Uniquement pour les commandes livrées : sans colis, il n&apos;y a rien
+                      contre quoi remettre l&apos;argent.
+                    </span>
+                  </span>
+                </label>
+                <div className="mt-4 max-w-xs">
+                  <Field
+                    name="codMax"
+                    label={t("admin.codMax")}
+                    defaultValue={payment.codMaxMillimes ? (payment.codMaxMillimes / 1000).toFixed(3) : ""}
+                    disabled={locked}
+                    hint="0 = pas de plafond. Au-delà, le moyen n'est pas proposé."
+                  />
+                </div>
+              </div>
+
               {!locked ? <AdminButton type="submit">{t("admin.saveChanges")}</AdminButton> : null}
             </form>
           </Panel>

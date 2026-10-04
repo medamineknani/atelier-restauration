@@ -146,8 +146,12 @@ export async function saveCommercialSettings(formData: FormData) {
 export async function savePaymentSettings(formData: FormData) {
   const admin = await requireSuperadminOrBack("paiement");
 
+  const codMax = String(formData.get("codMax") ?? "").replace(",", ".").trim();
+
   await saveSettings(
     {
+      payment_cod_enabled: formData.get("codEnabled") === "on",
+      payment_cod_max_millimes: Math.max(0, codMax === "" ? 0 : Math.round(Number(codMax) * 1000)),
       payment_manual_holder: String(formData.get("manualHolder") ?? "").trim(),
       payment_manual_bank: String(formData.get("manualBank") ?? "").trim(),
       payment_manual_iban: String(formData.get("manualIban") ?? "").trim(),
@@ -166,7 +170,9 @@ export async function savePaymentSettings(formData: FormData) {
     entityType: "settings",
     entityId: "payment",
     // On journalise l'intention, jamais les coordonnées bancaires.
-    metadata: { fields: ["manualHolder", "manualBank", "manualIban", "providerOrder"] },
+    metadata: {
+      fields: ["manualHolder", "manualBank", "manualIban", "providerOrder", "cod"],
+    },
   });
 
   revalidateSettings();
