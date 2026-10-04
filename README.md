@@ -104,10 +104,14 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
 
 ### Trois précautions locales
 
-1. **PGlite est mono-processus.** Arrêtez `npm run dev` avant `npm run db:seed`
-   ou `npm run db:migrate` : deux instances sur le même répertoire se marchent
-   dessus. Si la base refuse de démarrer, supprimez `.data/pg/postmaster.pid`,
-   ou repartez de `npm run db:reset`.
+1. **PGlite est mono-processus, et son répertoire ne survit pas à un arrêt
+   brutal.** Arrêtez `npm run dev` avant `npm run db:seed` ou
+   `npm run db:migrate` : deux instances sur le même répertoire le corrompent,
+   et un arrêt interrompu suffit à le rendre illisible — chaque requête
+   échoue alors avec `RuntimeError: Aborted()`. Le seul remède fiable est
+   `npm run db:reset`, qui reconstruit schéma, galerie et données de départ.
+   Supprimer `postmaster.pid` ne suffit pas. Rien de grave : la base de
+   développement est jetable, elle se reconstruit en une dizaine de secondes.
 2. **`npm run gallery` avant `npm run db:seed`.** La galerie fabrique les
    images puis un `manifest.json` que le seed lit pour créer les fiches.
    Semer avant de construire la galerie donne un site qui fonctionne, avec
