@@ -20,6 +20,7 @@ export function ClientsSearch({ value }: { value: string }) {
         name="q"
         type="search"
         defaultValue={value}
+        aria-label="Rechercher un client"
         placeholder="Nom, email, téléphone…"
         className={adminInputClass}
       />

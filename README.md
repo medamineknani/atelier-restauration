@@ -21,7 +21,7 @@ données et design system sont documentés et validés.
 | M4-a  | Back-office : file de production, écran de commande, catalogue | ✔ livré   |
 | M4-b  | Back-office : contenu, paramètres, équipe                     | ✔ livré   |
 | M5    | Paiement à la livraison (contre-remboursement)                | ✔ livré   |
-| M6    | Qualification : tests, accessibilité, performance, SEO       | ☐ à venir |
+| M6    | Qualification : tests, accessibilité, performance, SEO       | ◐ en cours |
 
 Le paiement en ligne (Konnect, Flouci, D17) n'est pas entrepris : le marché
 tunisien reste majoritairement au paiement à la livraison et au virement, et
@@ -111,11 +111,17 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
    `RuntimeError: Aborted()`. Le seul remède est `npm run db:reset`, qui
    reconstruit schéma, galerie et données de départ.
 
-   Un arrêt normal (Ctrl-C, `SIGTERM`) est sans risque : le serveur ferme la
-   base avant de s'éteindre, et les données sont relues au démarrage suivant.
-   Seul un arrêt forcé — `kill -9`, ou un processus tué par manque de mémoire —
-   laisse le répertoire irrécupérable. Supprimer `postmaster.pid` ne sert à
-   rien dans ce cas.
+   Un arrêt normal (Ctrl-C, `SIGTERM`) ne perd rien : le serveur ferme la base
+   avant de s'éteindre, et les commandes, les clients et les réglages sont
+   relus tels quels au démarrage suivant. Seul un arrêt forcé — `kill -9`, ou
+   un processus tué par manque de mémoire — laisse le répertoire
+   irrécupérable ; supprimer `postmaster.pid` ne sert à rien dans ce cas.
+
+   Attention aux faux positifs : une page peut répondre `200` alors que la base
+   est morte, parce que certaines lectures sont rattrapées par un `try/catch`
+   et remplacées par des valeurs par défaut. Pour savoir si elle vit
+   réellement, vérifiez qu'un contenu semé s'affiche — les prix sur `/tarifs`,
+   les légendes sur `/galerie` — plutôt que le seul code HTTP.
 2. **`npm run gallery` avant `npm run db:seed`.** La galerie fabrique les
    images puis un `manifest.json` que le seed lit pour créer les fiches.
    Semer avant de construire la galerie donne un site qui fonctionne, avec
@@ -141,6 +147,32 @@ chaque enregistrement.
 Le module `server-only`, fourni par Next et absent hors de Next, est remplacé
 par un module vide dans `vitest.config.ts` : dans un test Node, tout est
 serveur.
+
+### Accessibilité
+
+Le socle est conforme à WCAG 2.2 niveau AA sur les points mesurables sans
+navigateur, et ces points sont verrouillés par des tests.
+
+- **Contrastes.** `src/design-system/contrast.test.ts` relit la palette dans
+  `theme.css` et vérifie chaque couple texte/fond réellement employé : 4,5:1
+  pour le texte, 3:1 pour les éléments non textuels. Changer une teinte sans
+  tenir les seuils fait échouer la suite. Trois teintes ont été assombries à
+  cette occasion (`muted`, `warning`, `champagne-deep`).
+- **Contour de focus.** Aucune couleur unique ne tient 3:1 à la fois sur le
+  papier et sur l'encre : le contour est une variable CSS (`--focus-ring`),
+  champagne profond par défaut et champagne clair sur les surfaces sombres.
+- **Structure.** Un seul `h1` par page et aucun saut de niveau, vérifié page
+  par page sur le site public. Les repères `header` / `nav` / `main#contenu` /
+  `footer` sont posés, avec un lien d'évitement et des `nav` nommés.
+- **Clavier.** Les zones de dépôt de fichiers sont de vrais boutons ou des
+  `role="button"` avec gestion d'`Entrée` et d'`Espace` ; le champ de fichier
+  masqué est retiré de l'ordre de tabulation pour ne pas doubler l'arrêt.
+- **Images.** Aucune balise sans `alt`. Les deux `alt=""` du projet sont
+  décoratifs et doublés d'un `aria-hidden`.
+
+Restent à auditer avec un lecteur d'écran réel et un navigateur : les messages
+d'erreur de formulaire (annonce et rattachement aux champs), les régions
+`aria-live` pendant les téléversements, et le parcours complet au clavier.
 
 ### Tunnel de commande
 

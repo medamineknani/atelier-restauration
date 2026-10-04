@@ -16,9 +16,12 @@ export function ValueProps({ locale }: { locale: Locale }) {
           <div className="lg:col-span-5">
             <Reveal>
               <Eyebrow>{t("home.value.eyebrow")}</Eyebrow>
-              <p className="mt-7 font-display text-[1.75rem] leading-[1.25] text-ink md:text-[2.125rem]">
+              {/* Ce texte est le titre de la section : visuellement un
+                  intertitre, sémantiquement un h2 — sinon les cartes
+                  ci-dessous passent de h1 à h3 sans étage. */}
+              <h2 className="mt-7 font-display text-[1.75rem] leading-[1.25] text-ink md:text-[2.125rem]">
                 {t("home.value.line1")}
-              </p>
+              </h2>
               <p className="mt-6 max-w-[46ch] body-lg text-graphite">{t("home.value.line2")}</p>
               <Link
                 href={localePath(locale, "/a-propos")}

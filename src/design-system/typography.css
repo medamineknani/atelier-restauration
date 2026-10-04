@@ -44,10 +44,20 @@
     text-wrap: pretty;
   }
 
+  /* Le contour doit rester visible sur les fonds clairs comme sur les fonds
+     sombres, et aucune teinte unique ne tient les 3:1 exigés des deux côtés :
+     le champagne clair ne vaut que 2,2:1 sur le papier, le champagne profond
+     que 2,9:1 sur l'encre adoucie. D'où une variable, reprise sur les
+     surfaces sombres. */
   :focus-visible {
-    outline: 2px solid var(--color-champagne);
+    outline: 2px solid var(--focus-ring, var(--color-champagne-deep));
     outline-offset: 2px;
     border-radius: 1px;
+  }
+
+  .bg-ink,
+  .bg-ink-soft {
+    --focus-ring: var(--color-champagne);
   }
 
   ::selection {

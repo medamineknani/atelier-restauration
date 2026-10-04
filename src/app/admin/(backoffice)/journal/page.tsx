@@ -53,6 +53,7 @@ export default async function AdminJournalPage({
       <form className="flex flex-wrap gap-2">
         <select
           name="action"
+          aria-label="Filtrer par action"
           defaultValue={action ?? ""}
           className="rounded-sm border border-line bg-paper px-3 py-2 text-[0.8125rem] text-ink focus:border-champagne focus:outline-none"
         >

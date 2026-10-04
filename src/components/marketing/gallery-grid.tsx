@@ -14,11 +14,16 @@ export function GalleryGrid({
   locale,
   items,
   columns = 3,
+  headingLevel = 3,
 }: {
   locale: Locale;
   items: TransformationCard[];
   columns?: 2 | 3;
+  /** 2 quand la mosaïque est le contenu principal de la page (/galerie),
+   *  3 quand elle n'est qu'une section sous un titre existant. */
+  headingLevel?: 2 | 3;
 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   const t = createTranslator(locale);
 
   return (
@@ -68,9 +73,9 @@ export function GalleryGrid({
               <p className="eyebrow text-stone">
                 {t(`gallery.categories.${item.category}` as never) || item.category}
               </p>
-              <h3 className="mt-2 font-display text-[1.0625rem] leading-snug text-ink transition-fast group-hover:text-champagne-deep">
+              <Heading className="mt-2 font-display text-[1.0625rem] leading-snug text-ink transition-fast group-hover:text-champagne-deep">
                 {item.title}
-              </h3>
+              </Heading>
               <p className="mt-2 line-clamp-2 text-[0.875rem] leading-relaxed text-stone">
                 {item.workDescription}
               </p>

@@ -12,7 +12,7 @@
   --color-ink-soft: #2a2723;
   --color-graphite: #4a463f;
   --color-stone: #6e6862;
-  --color-muted: #8c857c;
+  --color-muted: #746e67; /* texte secondaire : 4,5:1 sur cream (WCAG AA) */
 
   --color-paper: #fdfcf9; /* fond par défaut — jamais de blanc pur */
   --color-cream: #f6f2ea;
@@ -24,11 +24,11 @@
   /* --- Accent (rare, < 5 % de la surface) -------------------------------- */
   --color-champagne: #b99b62;
   --color-champagne-soft: #e5d9c0;
-  --color-champagne-deep: #8e7440;
+  --color-champagne-deep: #836b3b; /* accent foncé : 4,5:1 sur cream, et 3,8:1 sur ink comme contour de focus */
 
   /* --- Sémantique -------------------------------------------------------- */
   --color-success: #4f6b52;
-  --color-warning: #a87b3e;
+  --color-warning: #8d6734; /* 4,5:1 sur cream : sert aussi de fond à du texte clair */
   --color-danger: #9a3b34;
   --color-info: #4a5a66;
 

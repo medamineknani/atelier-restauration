@@ -11,14 +11,25 @@ import * as schema from "./schema";
 export type DB = PgliteDatabase<typeof schema>;
 
 /**
+ * État conservé hors du module : Next évalue ce fichier dans deux graphes
+ * distincts (celui des composants serveur et celui des actions de route), et
+ * le rejoue à chaque rechargement à chaud. Sans ce relais sur `globalThis`,
+ * on ouvrirait plusieurs fois le même répertoire PGlite, qui n'accepte qu'un
+ * seul client à la fois.
+ */
+const globalForDb = globalThis as unknown as {
+  __atelierDb?: DB;
+  __atelierPglite?: PGlite;
+  __atelierDbClosing?: Promise<void>;
+  __atelierDbShutdownHooked?: boolean;
+};
+
+/**
  * Client base de données.
  *
  * - Avec `DATABASE_URL` : Postgres managé (production / staging).
  * - Sans : Postgres embarqué (PGlite) dans `.data/pg`. **Même dialecte SQL**,
  *   aucun serveur ni Docker à installer pour développer.
- *
- * L'instance est mise en cache sur `globalThis` : en développement, le rechargement
- * à chaud des modules ne doit pas ouvrir deux fois la base.
  */
 function createDb(): DB {
   if (env.DATABASE_URL) {
@@ -32,12 +43,6 @@ function createDb(): DB {
   globalForDb.__atelierPglite = client;
   return drizzlePglite(client, { schema });
 }
-
-const globalForDb = globalThis as unknown as {
-  __atelierDb?: DB;
-  __atelierPglite?: PGlite;
-  __atelierDbClosed?: boolean;
-};
 
 export const db: DB = globalForDb.__atelierDb ?? createDb();
 
@@ -53,17 +58,24 @@ if (!globalForDb.__atelierDb) globalForDb.__atelierDb = db;
  *
  * Autrement dit : arrêter le serveur de développement effaçait les commandes,
  * les clients et les réglages. D'où cette fermeture explicite.
+ *
+ * La promesse est mémorisée : deux `close()` simultanés sur le même client se
+ * gênent et n'aboutissent jamais, ce qui arriverait à chaque arrêt puisque ce
+ * module est évalué dans deux graphes.
  */
-export async function closeDb(): Promise<void> {
-  const client = globalForDb.__atelierPglite;
-  if (!client || globalForDb.__atelierDbClosed) return;
-  globalForDb.__atelierDbClosed = true;
+export function closeDb(): Promise<void> {
+  if (globalForDb.__atelierDbClosing) return globalForDb.__atelierDbClosing;
 
-  // En cas de fermeture récalcitrante, on ne bloque pas l'arrêt du serveur.
-  await Promise.race([
+  const client = globalForDb.__atelierPglite;
+  if (!client) return Promise.resolve();
+
+  globalForDb.__atelierDbClosing = Promise.race([
     client.close(),
-    new Promise((resolve) => setTimeout(resolve, 5_000)),
+    // En cas de fermeture récalcitrante, on ne bloque pas l'arrêt du serveur.
+    new Promise<void>((resolve) => setTimeout(resolve, 5_000)),
   ]);
+
+  return globalForDb.__atelierDbClosing;
 }
 
 /**
@@ -72,18 +84,19 @@ export async function closeDb(): Promise<void> {
  * Le serveur ne doit pas s'éteindre avant que PGlite ait écrit : d'où
  * l'attente, puis la sortie explicite.
  */
-function shutdown(signal: string) {
+function shutdown(code: number) {
   return () => {
-    void closeDb().finally(() => process.exit(signal === "SIGINT" ? 130 : 143));
+    void closeDb().finally(() => process.exit(code));
   };
 }
 
-if (globalForDb.__atelierPglite) {
+if (globalForDb.__atelierPglite && !globalForDb.__atelierDbShutdownHooked) {
+  globalForDb.__atelierDbShutdownHooked = true;
   // `beforeExit` couvre les arrêts sans signal ; les deux signaux couvrent
   // Ctrl-C et l'arrêt demandé par l'outil ou l'hébergeur.
-  process.once("beforeExit", shutdown("beforeExit"));
-  process.once("SIGINT", shutdown("SIGINT"));
-  process.once("SIGTERM", shutdown("SIGTERM"));
+  process.once("beforeExit", shutdown(0));
+  process.once("SIGINT", shutdown(130));
+  process.once("SIGTERM", shutdown(143));
 }
 
 export { schema };

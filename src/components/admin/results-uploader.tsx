@@ -81,7 +81,10 @@ export function ResultsUploader({
 
   return (
     <div className="grid gap-4">
-      <div
+      {/* Un vrai bouton, pas un `div` cliquable : le clavier et les lecteurs
+          d'écran l'atteignent alors sans Javascript supplémentaire. */}
+      <button
+        type="button"
         onDragOver={(event) => {
           event.preventDefault();
           setDragging(true);
@@ -93,12 +96,12 @@ export function ResultsUploader({
           onFiles(event.dataTransfer.files);
         }}
         onClick={() => inputRef.current?.click()}
-        className={`cursor-pointer rounded-md border-2 border-dashed px-6 py-10 text-center transition-fast ${
+        className={`w-full cursor-pointer rounded-md border-2 border-dashed px-6 py-10 text-center transition-fast ${
           dragging ? "border-champagne bg-cream" : "border-line bg-paper hover:border-line-strong"
         }`}
       >
-        <p className="text-[0.9375rem] text-ink">{labels.dropzone}</p>
-        <p className="mt-2 text-[0.8125rem] text-muted">{labels.hint}</p>
+        <span className="block text-[0.9375rem] text-ink">{labels.dropzone}</span>
+        <span className="mt-2 block text-[0.8125rem] text-muted">{labels.hint}</span>
 
         <input
           ref={inputRef}
@@ -106,9 +109,10 @@ export function ResultsUploader({
           multiple
           accept="image/jpeg,image/png,image/webp,image/tiff"
           className="hidden"
+          tabIndex={-1}
           onChange={(event) => onFiles(event.target.files)}
         />
-      </div>
+      </button>
 
       {items.length > 0 ? (
         <div className="grid gap-2">

@@ -239,6 +239,8 @@ export function PhotoUploader({
         accept={acceptedFormats.join(",")}
         multiple
         capture="environment"
+        aria-label={labels.chooseFromPhone}
+        tabIndex={-1}
         onChange={(event) => {
           const files = Array.from(event.target.files ?? []);
           if (files.length) void addFiles(files);

@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Le serveur de développement refuse par défaut les ressources demandées
+  // depuis une autre origine — ce qui coupe le rechargement à chaud quand on
+  // travaille derrière un domaine de prévisualisation.
+  allowedDevOrigins: ["*.e2b.app", "*.vercel.app", "localhost"],
   images: {
     formats: ["image/avif", "image/webp"],
     // Les photos clients sont servies par /api/files/[id] (même origine) :

@@ -71,6 +71,7 @@ export function NoteForm({
 
       <textarea
         name="body"
+        aria-label="Texte de la note"
         rows={3}
         required
         placeholder={isClient ? labels.placeholderClient : labels.placeholderInternal}

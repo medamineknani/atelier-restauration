@@ -99,7 +99,7 @@ export default async function GalleryPage({
           {items.length === 0 ? (
             <p className="py-16 text-center text-[0.9375rem] text-stone">{t("gallery.emptyFilter")}</p>
           ) : (
-            <GalleryGrid locale={locale} items={items} />
+            <GalleryGrid locale={locale} items={items} headingLevel={2} />
           )}
         </Container>
       </Section>
