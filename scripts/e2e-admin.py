@@ -22,6 +22,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import zipfile
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:3000").rstrip("/")
@@ -70,27 +71,36 @@ def check(label: str, ok: bool, detail: str = "") -> None:
         failures.append(label)
 
 
-def action_fields(page: str, marker: str) -> dict[str, str]:
-    fields: dict[str, str] = {}
+def action_fields(page: str, marker: str, which: int = 0) -> dict[str, str]:
+    """
+    Champs cachés que Next ajoute au formulaire contenant `marker`.
+
+    `which` choisit l'occurrence : une fiche affiche souvent deux formulaires
+    quasi identiques (enregistrer, puis supprimer) et seul l'ordre les
+    distingue.
+    """
+    matches: list[dict[str, str]] = []
     for form in re.findall(r"<form[^>]*>.*?</form>", page, re.S):
         if marker not in form:
             continue
+        fields: dict[str, str] = {}
         for tag in re.findall(r"<input[^>]*>", form):
             name = re.search(r'name="(\$ACTION[^"]*)"', tag)
             if not name:
                 continue
             value = re.search(r'value="([^"]*)"', tag)
             fields[name.group(1)] = html.unescape(value.group(1)) if value else ""
-        break
-    return fields
+        matches.append(fields)
+    return matches[which] if which < len(matches) else {}
+
 
 
 def post_form(path: str, page: str, data: dict[str, str], marker: str,
-              jar: str = ADMIN_JAR) -> str:
+              jar: str = ADMIN_JAR, which: int = 0) -> str:
     global last_status
     args = ["-o", "/tmp/atelier-admin-post.txt", "-D", "/tmp/atelier-admin-post.h",
             "-w", "%{http_code} %{redirect_url}", "-X", "POST", "-H", f"Origin: {BASE}"]
-    for key, value in action_fields(page, marker).items():
+    for key, value in action_fields(page, marker, which).items():
         args += ["-F", f"{key}={value}"]
     for key, value in data.items():
         args += ["-F", f"{key}={value}"]
@@ -300,6 +310,54 @@ def main() -> int:
 
         page = text(get("/tarifs", ADMIN_JAR))
         check("prix d’origine rétabli", "199 DT" in page and "219 DT" not in page)
+
+    # --- Contenu éditable --------------------------------------------------
+    print("11. Contenu")
+    for path in ("/admin/contenu", "/admin/contenu/temoignages", "/admin/contenu/galerie", "/admin/demandes"):
+        code = status_of(path).split()[0]
+        check(f"écran {path}", code == "200", code)
+
+    # Marqueur unique : un résidu d’exécution précédente porterait le même
+    # texte et serait supprimé à la place de celui qu’on vient de créer.
+    marker = f"Question-e2e-{int(time.time())}"
+    page = get("/admin/contenu/faq")
+    post_form("/admin/contenu/faq", page, {
+        "question.fr": marker,
+        "answer.fr": "Réponse de test, visible sur la page publique.",
+        "question.en": "E2E question",
+        "answer.en": "Test answer.",
+        "category": "service",
+        "sortOrder": "99",
+        "isPublished": "on",
+    }, 'name="question.fr"', ADMIN_JAR)
+    check("question ajoutée", "303" in last_status or "307" in last_status, last_status[:70])
+
+    page = text(get("/faq", ADMIN_JAR))
+    check("question visible sur le site", marker in page)
+
+    page = get("/admin/contenu/faq")
+    # Le résumé de la fiche affiche la question ; les deux formulaires
+    # (enregistrer, supprimer) viennent APRÈS, avec l'identifiant caché.
+    # Le premier `name="id"` suivant le texte est donc celui de la bonne fiche.
+    faq_id = ""
+    page = get("/admin/contenu/faq")
+    marker_at = page.find(marker)
+    if marker_at > 0:
+        candidates = [
+            (match.start(), match.group(1))
+            for match in re.finditer(r'name="id" value="([0-9a-f-]{36})"', page)
+        ]
+        after = [item for item in candidates if item[0] > marker_at]
+        if after:
+            faq_id = after[0][1]
+
+    check("question retrouvée dans l’admin", bool(faq_id), faq_id[:8] + "…" if faq_id else "")
+
+    if faq_id:
+        # La fiche porte deux formulaires : le second est la suppression.
+        post_form("/admin/contenu/faq", page, {"id": faq_id}, f'value="{faq_id}"', ADMIN_JAR, which=1)
+        page = text(get("/faq", ADMIN_JAR))
+        check("question retirée du site", marker not in page)
 
     print()
     if failures:

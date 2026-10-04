@@ -74,8 +74,8 @@ en local : PGlite fournit un Postgres embarqué, sans serveur à installer.
 npm install
 cp .env.example .env.local          # facultatif : les défauts suffisent en local
 npm run db:migrate                  # schéma (Postgres embarqué dans .data/pg)
-npm run db:seed                     # catalogue, FAQ, témoignages, réglages
 npm run gallery                     # paires avant/après (depuis assets/sources)
+npm run db:seed                     # catalogue, FAQ, témoignages, galerie, réglages
 npm run dev                         # http://localhost:3000
 ```
 
@@ -90,22 +90,31 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
 | `npm run lint`          | ESLint (configuration Next, format « flat config »)        |
 | `npm run test`          | Tests unitaires (Vitest)                                   |
 | `npm run db:generate`   | Génère une migration après modification du schéma          |
-| `npm run db:reset`      | Repart de zéro : base + stockage, puis migre et sème       |
 | `npm run gallery`       | Reconstruit les paires avant/après de la galerie           |
+| `npm run db:reset`      | Repart de zéro : base + stockage, puis migre et sème       |
 | `npm run e2e`           | Parcours de commande complet, sans navigateur           |
 | `npm run e2e:compte`    | Espace client : lien magique, rattachement, facture...  |
 
-### Deux précautions locales
+### Trois précautions locales
 
 1. **PGlite est mono-processus.** Arrêtez `npm run dev` avant `npm run db:seed`
    ou `npm run db:migrate` : deux instances sur le même répertoire se marchent
    dessus. Si la base refuse de démarrer, supprimez `.data/pg/postmaster.pid`,
    ou repartez de `npm run db:reset`.
-2. **Les fichiers ne vont jamais dans un répertoire nommé `storage/`.** Ce nom
+2. **`npm run gallery` avant `npm run db:seed`.** La galerie fabrique les
+   images puis un `manifest.json` que le seed lit pour créer les fiches.
+   Semer avant de construire la galerie donne un site qui fonctionne, avec
+   une page « Galerie » vide.
+3. **Les fichiers ne vont jamais dans un répertoire nommé `storage/`.** Ce nom
    est exclu des sauvegardes d'environnement sur plusieurs hébergeurs : son
    contenu disparaît silencieusement. Le stockage local est donc dans
    `.data/files` (`STORAGE_LOCAL_DIR`) et les images sources, versionnées, dans
    `assets/sources`.
+
+PGlite émet parfois `Unhandled Rejection: RuntimeError: Aborted()` dans les
+journaux du serveur de développement, à l'arrêt d'une requête. C'est un bruit
+connu de l'émulateur WASM, pas une erreur applicative : la requête répond
+normalement et aucun travail n'est perdu.
 
 ### Tunnel de commande
 
@@ -116,6 +125,11 @@ identifié par un cookie signé (`ar_draft`), jamais par un identifiant devinabl
 `scripts/e2e-checkout.py` rejoue ce parcours **sans JavaScript** — c'est
 aussi un test d'amélioration progressive : si le tunnel cesse de fonctionner
 sans JS, le script échoue.
+
+Le référencement est servi par `/sitemap.xml` et `/robots.txt`, générés à la
+demande : pages éditoriales, fiches galerie publiées et pages photobooks, avec
+`hreflang` `fr-TN` / `en-GB` et `x-default`. Le back-office, l'espace client,
+le tunnel de commande et l'API sont exclus de l'indexation.
 
 ### Espace client
 

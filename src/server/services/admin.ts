@@ -5,6 +5,13 @@ import { db } from "@/server/db";
 import {
   assets,
   auditLogs,
+  contactRequests,
+  faqItems,
+  faqTranslations,
+  testimonials,
+  testimonialTranslations,
+  transformations,
+  transformationTranslations,
   invoices,
   orderItems,
   orderNotes,
@@ -401,4 +408,65 @@ export async function adminProduct(id: string) {
   ]);
 
   return { product, translations, history };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Contenu du site                                                             */
+/* -------------------------------------------------------------------------- */
+
+export async function adminListFaq() {
+  const items = await db.select().from(faqItems).orderBy(asc(faqItems.category), asc(faqItems.sortOrder));
+  const translations = await db.select().from(faqTranslations);
+  const byItem = new Map<string, Record<string, { question: string; answer: string }>>();
+  for (const row of translations) {
+    const entry = byItem.get(row.faqId) ?? {};
+    entry[row.locale] = { question: row.question, answer: row.answer };
+    byItem.set(row.faqId, entry);
+  }
+  return items.map((item) => ({ ...item, translations: byItem.get(item.id) ?? {} }));
+}
+
+export async function adminListTestimonials() {
+  const items = await db.select().from(testimonials).orderBy(desc(testimonials.createdAt));
+  const translations = await db.select().from(testimonialTranslations);
+  const byItem = new Map<string, Record<string, string>>();
+  for (const row of translations) {
+    const entry = byItem.get(row.testimonialId) ?? {};
+    entry[row.locale] = row.quote;
+    byItem.set(row.testimonialId, entry);
+  }
+  return items.map((item) => ({ ...item, quotes: byItem.get(item.id) ?? {} }));
+}
+
+export async function adminListTransformations() {
+  const items = await db
+    .select()
+    .from(transformations)
+    .orderBy(asc(transformations.category), asc(transformations.sortOrder));
+  const translations = await db.select().from(transformationTranslations);
+  const byItem = new Map<
+    string,
+    Record<string, { title: string; workDescription: string | null; altBefore: string | null; altAfter: string | null }>
+  >();
+  for (const row of translations) {
+    const entry = byItem.get(row.transformationId) ?? {};
+    entry[row.locale] = {
+      title: row.title,
+      workDescription: row.workDescription,
+      altBefore: row.altBefore,
+      altAfter: row.altAfter,
+    };
+    byItem.set(row.transformationId, entry);
+  }
+  return items.map((item) => ({ ...item, translations: byItem.get(item.id) ?? {} }));
+}
+
+/** Boîte de réception des demandes de contact et de devis. */
+export async function adminListContactRequests(filter: "new" | "all" = "all") {
+  return db
+    .select()
+    .from(contactRequests)
+    .where(filter === "new" ? eq(contactRequests.status, "new") : undefined)
+    .orderBy(desc(contactRequests.createdAt))
+    .limit(80);
 }

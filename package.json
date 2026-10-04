@@ -10,7 +10,7 @@
     "build": "next build",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
-    "db:reset": "rm -rf .data && npm run db:migrate && npm run db:seed",
+    "db:reset": "rm -rf .data && npm run db:migrate && npm run gallery && npm run db:seed",
     "db:seed": "tsx scripts/seed.ts",
     "dev": "next dev",
     "e2e": "python3 scripts/e2e-checkout.py",
