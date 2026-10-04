@@ -18,7 +18,8 @@ données et design system sont documentés et validés.
 | M1    | Site public : 11 sections d'accueil, services, tarifs, FAQ   | ✔ livré   |
 | M2    | Tunnel de commande en 7 étapes + confirmation et suivi invité| ✔ livré   |
 | M3    | Espace client : lien magique, suivi, résultats, factures     | ✔ livré   |
-| M4    | Back-office : commandes, fichiers, catalogue, contenu        | ☐ à venir |
+| M4-a  | Back-office : file de production, écran de commande, catalogue | ✔ livré   |
+| M4-b  | Back-office : contenu, paramètres, équipe                     | ☐ en cours |
 | M5    | Paiement en ligne (Konnect / Flouci / D17)                   | ☐ à venir |
 | M6    | Qualification : tests, accessibilité, performance, SEO       | ☐ à venir |
 
@@ -144,6 +145,42 @@ du propriétaire :
 En développement, `POST /api/dev/order` fait avancer une commande et dépose des
 fichiers restaurés : de quoi vérifier ces deux routes sans jouer l'atelier à la
 main. Neutralisée en production (404).
+
+### Back-office
+
+Accessible en `/admin`, en français, hors du site public. L'accès est vérifié
+dans la coque du groupe de routes : un compte **client valide n'ouvre jamais
+l'administration**, même en tapant l'URL. Un seul compte est créé par le seed
+(`admin@atelier-restauration.tn`), surchargeable par `SEED_ADMIN_EMAIL` /
+`SEED_ADMIN_PASSWORD`.
+
+| Route                     | Rôle                                                  |
+| ------------------------- | ----------------------------------------------------- |
+| `/admin`                  | File de production, répartition, indicateurs          |
+| `/admin/commandes`        | Liste filtrable (statut, type, recherche, retard)     |
+| `/admin/commandes/[id]`   | ★ L'écran principal : six onglets, une seule page      |
+| `/admin/clients`          | Fiches, historique, commandes invitées non rattachées |
+| `/admin/catalogue`        | Packs et options — **prix éditables sans redéploiement** |
+| `/admin/journal`          | Journal d'audit, lecture seule                        |
+
+Trois règles tiennent l'ensemble :
+
+1. **Une commande, un écran.** Client, fichiers, statut, notes, facture et
+   journal sont dans `/admin/commandes/[id]`. L'opérateur ne navigue pas.
+2. **Le statut ne s'invente pas.** Seules les transitions autorisées par la
+   machine à états sont proposées ; une transition refusée s'affiche en
+   message, jamais en erreur 500.
+3. **Rien ne s'efface sans trace.** Chaque dépôt, téléchargement d'original,
+   changement de prix et changement de statut est journalisé.
+
+Le prix d'un produit est saisi en dinars et enregistré en millimes. Il est
+visible sur le site dès l'enregistrement, et son historique garde qui a changé
+quoi, quand, et pourquoi. **Un prix modifié ne change jamais celui d'une
+commande déjà passée** : chaque ligne de commande porte son propre cliché.
+
+`npm run e2e:admin` vérifie le parcours complet — connexion, changement de
+statut, dépôt et publication des résultats, facture, journal — ainsi que la
+frontière client ↔ administration.
 
 ---
 

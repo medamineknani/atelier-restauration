@@ -5,7 +5,15 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { assets, invoices, orderNotes, type OrderStatusCode } from "@/server/db/schema";
+import {
+  assets,
+  invoices,
+  orderNotes,
+  priceHistory,
+  productTranslations,
+  products,
+  type OrderStatusCode,
+} from "@/server/db/schema";
 import { createSession, destroySession } from "@/lib/auth/session";
 import { currentAdmin } from "@/lib/auth/admin";
 import { logAudit } from "@/server/services/audit";
@@ -346,4 +354,153 @@ export async function regenerateInvoice(formData: FormData) {
 
   revalidatePath(`/admin/commandes/${orderId}`);
   redirect(`/admin/commandes/${orderId}?ok=facture`);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Catalogue (superadmin)                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Enregistre un produit.
+ *
+ * Réservé au superadmin : un prix n'est pas un texte, c'est un engagement
+ * envers le client. La variation de plus de 20 % est journalisée avec la
+ * raison — c'est un garde-fou contre la faute de frappe, pas une contrainte.
+ */
+export async function saveProduct(formData: FormData) {
+  const admin = await currentAdmin();
+  if (!admin) redirect("/admin/connexion");
+  if (admin.role !== "superadmin") redirect("/admin/catalogue?erreur=permissions");
+
+  const id = z.string().uuid().optional().parse(formData.get("id") ?? undefined) || null;
+  const price = Math.round(Number(formData.get("priceDinars") ?? 0) * 1000);
+  if (!Number.isFinite(price) || price < 0) redirect("/admin/catalogue?erreur=prix");
+
+  const values = {
+    slug: z.string().trim().min(1).parse(formData.get("slug")),
+    kind: z.enum(["pack", "extra"]).parse(formData.get("kind")),
+    family: z.enum(["digital", "photobook"]).parse(formData.get("family")),
+    priceMillimes: price,
+    photosIncluded: optionalInt(formData.get("photosIncluded")),
+    photosMin: optionalInt(formData.get("photosMin")),
+    photosMax: optionalInt(formData.get("photosMax")),
+    turnaroundDaysMin: optionalInt(formData.get("turnaroundDaysMin")) ?? 5,
+    turnaroundDaysMax: optionalInt(formData.get("turnaroundDaysMax")) ?? 7,
+    pricingMode: z
+      .enum(["flat", "per_photo", "per_page", "per_copy"])
+      .parse(formData.get("pricingMode") ?? "flat"),
+    maxQuantity: optionalInt(formData.get("maxQuantity")),
+    requiresShipping: formData.get("requiresShipping") === "on",
+    isFeatured: formData.get("isFeatured") === "on",
+    isActive: formData.get("isActive") === "on",
+    sortOrder: optionalInt(formData.get("sortOrder")) ?? 0,
+    updatedAt: new Date(),
+  };
+
+  let productId = id;
+  let previousPrice: number | null = null;
+
+  if (id) {
+    const [current] = await db.select().from(products).where(eq(products.id, id)).limit(1);
+    if (!current) redirect("/admin/catalogue?erreur=introuvable");
+    previousPrice = current.priceMillimes;
+    await db.update(products).set(values).where(eq(products.id, id));
+  } else {
+    const [created] = await db.insert(products).values(values).returning();
+    productId = created!.id;
+  }
+
+  // Traductions : une ligne par langue, réécrite intégralement.
+  for (const locale of ["fr", "en"] as const) {
+    const name = String(formData.get(`name.${locale}`) ?? "").trim();
+    if (!name) continue;
+
+    const entry = {
+      name,
+      tagline: String(formData.get(`tagline.${locale}`) ?? "").trim() || null,
+      description: String(formData.get(`description.${locale}`) ?? "").trim() || null,
+      features: String(formData.get(`features.${locale}`) ?? "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean),
+    };
+
+    await db
+      .insert(productTranslations)
+      .values({ productId: productId!, locale, ...entry })
+      .onConflictDoUpdate({
+        target: [productTranslations.productId, productTranslations.locale],
+        set: entry,
+      });
+  }
+
+  if (previousPrice !== null && previousPrice !== price) {
+    await db.insert(priceHistory).values({
+      productId: productId!,
+      oldPriceMillimes: previousPrice,
+      newPriceMillimes: price,
+      changedBy: admin.id,
+      reason: String(formData.get("reason") ?? "").trim() || null,
+    });
+  }
+
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email,
+    actorRole: admin.role,
+    action: id ? "product.updated" : "product.created",
+    entityType: "product",
+    entityId: productId!,
+    metadata: { priceMillimes: price, previousMillimes: previousPrice },
+  });
+
+  // Un prix change partout à la fois : pages de tarifs, tunnel, récapitulatif.
+  // Le site est réécrit sous un préfixe de locale (`/tarifs` → `/fr/tarifs`) :
+  // il faut donc invalider chaque variante, sinon le visiteur suivant lit
+  // l'ancien prix — celui qu'on vient de corriger.
+  revalidateCatalogPaths();
+  redirect(`/admin/catalogue/${productId}?ok=1`);
+}
+
+/** Retirer un produit du catalogue sans l'effacer : les anciennes commandes gardent leur nom. */
+export async function toggleProductActive(formData: FormData) {
+  const admin = await currentAdmin();
+  if (!admin) redirect("/admin/connexion");
+  if (admin.role !== "superadmin") redirect("/admin/catalogue?erreur=permissions");
+
+  const id = z.string().uuid().parse(formData.get("id"));
+  const [current] = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  if (!current) redirect("/admin/catalogue");
+
+  await db
+    .update(products)
+    .set({ isActive: !current.isActive, updatedAt: new Date() })
+    .where(eq(products.id, id));
+
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email,
+    actorRole: admin.role,
+    action: current.isActive ? "product.deactivated" : "product.activated",
+    entityType: "product",
+    entityId: id,
+  });
+
+  revalidateCatalogPaths();
+  redirect("/admin/catalogue");
+}
+
+/** Invalide les pages qui affichent des prix, dans chaque langue. */
+function revalidateCatalogPaths() {
+  revalidatePath("/", "layout");
+  for (const locale of ["fr", "en", "ar"] as const) {
+    revalidatePath(`/${locale}`, "layout");
+  }
+}
+
+function optionalInt(value: FormDataEntryValue | null): number | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? Math.round(parsed) : null;
 }

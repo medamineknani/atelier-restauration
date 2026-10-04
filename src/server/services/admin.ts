@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/server/db";
 import {
   assets,
@@ -11,6 +11,9 @@ import {
   orderStatusEvents,
   orders,
   payments,
+  priceHistory,
+  productTranslations,
+  products,
   users,
 } from "@/server/db/schema";
 import type { OrderStatusCode } from "@/server/db/schema";
@@ -355,4 +358,47 @@ export async function listAudit(filters: { action?: string; entityType?: string;
   const [total] = await db.select({ count: count() }).from(auditLogs).where(where);
 
   return { rows, total: Number(total?.count ?? 0), page, perPage };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Catalogue                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export async function adminListProducts() {
+  const rows = await db
+    .select()
+    .from(products)
+    .where(isNull(products.deletedAt))
+    .orderBy(asc(products.family), asc(products.kind), asc(products.sortOrder));
+
+  const translations = await db.select().from(productTranslations);
+  const byProduct = new Map<string, Record<string, { name: string; tagline: string | null }>>();
+
+  for (const row of translations) {
+    const entry = byProduct.get(row.productId) ?? {};
+    entry[row.locale] = { name: row.name, tagline: row.tagline };
+    byProduct.set(row.productId, entry);
+  }
+
+  return rows.map((product) => ({
+    ...product,
+    translations: byProduct.get(product.id) ?? {},
+  }));
+}
+
+export async function adminProduct(id: string) {
+  const [product] = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  if (!product) return null;
+
+  const [translations, history] = await Promise.all([
+    db.select().from(productTranslations).where(eq(productTranslations.productId, id)),
+    db
+      .select()
+      .from(priceHistory)
+      .where(eq(priceHistory.productId, id))
+      .orderBy(desc(priceHistory.createdAt))
+      .limit(20),
+  ]);
+
+  return { product, translations, history };
 }

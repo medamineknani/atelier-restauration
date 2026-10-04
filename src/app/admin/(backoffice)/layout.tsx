@@ -22,6 +22,7 @@ export default async function BackofficeLayout({ children }: { children: ReactNo
     { href: "/admin", label: t("admin.dashboard") },
     { href: "/admin/commandes", label: t("admin.orders") },
     { href: "/admin/clients", label: t("admin.clients") },
+    { href: "/admin/catalogue", label: t("admin.catalog") },
   ];
   const secondary = [{ href: "/admin/journal", label: t("admin.audit") }];
 

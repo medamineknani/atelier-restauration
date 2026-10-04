@@ -57,6 +57,13 @@ def status_of(path: str, jar: str = ADMIN_JAR) -> str:
                 f"{BASE}{path}").stdout.strip()
 
 
+def text(page: str) -> str:
+    """Texte visible d'une page : les prix sont souvent coupés en deux balises."""
+    stripped = re.sub(r"<script.*?</script>", " ", page, flags=re.S)
+    stripped = re.sub(r"<[^>]+>", " ", stripped)
+    return re.sub(r"\s+", " ", stripped).replace("\u202f", " ").replace("\u00a0", " ")
+
+
 def check(label: str, ok: bool, detail: str = "") -> None:
     print(("  ✓ " if ok else "  ✗ ") + label + (f" — {detail}" if detail else ""))
     if not ok:
@@ -230,6 +237,69 @@ def main() -> int:
         code = curl(CLIENT_JAR, "-o", "/dev/null", "-w", "%{http_code}",
                     f"{BASE}/api/admin/commandes/{order_id}/originaux").stdout.strip()
         check("client ne peut pas télécharger les originaux", code in {"401", "403"}, code)
+
+    # --- Catalogue : un prix modifiable sans redéploiement -----------------
+    print("10. Catalogue")
+    page = get("/admin/catalogue")
+    check("catalogue listé", "Premium" in page and "199" in page)
+
+    premium_id = ""
+    for match in re.finditer(r'/admin/catalogue/([0-9a-f-]{36})"[^>]*>(?:(?!</a>).)*', page, re.S):
+        block = match.group(0)
+        if "premium" in block:
+            premium_id = match.group(1)
+            break
+    check("pack identifié", bool(premium_id), premium_id[:8] + "…" if premium_id else "")
+
+    if premium_id:
+        page = get(f"/admin/catalogue/{premium_id}")
+        check("fiche produit", 'name="priceDinars"' in page)
+
+        post_form(f"/admin/catalogue/{premium_id}", page, {
+            "id": premium_id,
+            "slug": "premium",
+            "kind": "pack",
+            "family": "digital",
+            "priceDinars": "219",
+            "name.fr": "Premium",
+            "photosIncluded": "50",
+            "turnaroundDaysMin": "5",
+            "turnaroundDaysMax": "7",
+            "pricingMode": "flat",
+            "sortOrder": "2",
+            "isActive": "on",
+            "isFeatured": "on",
+            "reason": "test e2e",
+        }, 'name="priceDinars"', ADMIN_JAR)
+        check("prix enregistré", "303" in last_status or "307" in last_status, last_status[:70])
+
+        page = text(get("/tarifs", ADMIN_JAR))
+        check("nouveau prix visible sur le site", "219 DT" in page)
+
+        # On remet le prix d'origine : le test ne doit pas laisser de trace.
+        page = get(f"/admin/catalogue/{premium_id}")
+        post_form(f"/admin/catalogue/{premium_id}", page, {
+            "id": premium_id,
+            "slug": "premium",
+            "kind": "pack",
+            "family": "digital",
+            "priceDinars": "199",
+            "name.fr": "Premium",
+            "photosIncluded": "50",
+            "turnaroundDaysMin": "5",
+            "turnaroundDaysMax": "7",
+            "pricingMode": "flat",
+            "sortOrder": "2",
+            "isActive": "on",
+            "isFeatured": "on",
+            "reason": "retour test e2e",
+        }, 'name="priceDinars"', ADMIN_JAR)
+
+        page = get(f"/admin/catalogue/{premium_id}")
+        check("historique des prix conservé", "test e2e" in page)
+
+        page = text(get("/tarifs", ADMIN_JAR))
+        check("prix d’origine rétabli", "199 DT" in page and "219 DT" not in page)
 
     print()
     if failures:
