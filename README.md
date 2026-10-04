@@ -7,7 +7,20 @@
 
 ## Statut du projet
 
-**PHASES 1 & 2 terminées** — analyse, architecture, sitemap, parcours, schéma de données et design system sont documentés et soumis à validation. Le développement (PHASES 3 à 6) démarre après arbitrage des décisions listées en fin de ce fichier.
+**PHASES 1 & 2 terminées** — analyse, architecture, sitemap, parcours, schéma de
+données et design system sont documentés et validés.
+
+**Jalons livrés**
+
+| Jalon | Contenu                                                     | État      |
+| ----- | ----------------------------------------------------------- | --------- |
+| M0    | Socle : schéma, migrations, seed, stockage, emails, i18n     | ✔ livré   |
+| M1    | Site public : 11 sections d'accueil, services, tarifs, FAQ   | ✔ livré   |
+| M2    | Tunnel de commande en 7 étapes + confirmation et suivi invité| ✔ livré   |
+| M3    | Espace client : lien magique, suivi, résultats, factures     | ✔ livré   |
+| M4    | Back-office : commandes, fichiers, catalogue, contenu        | ☐ à venir |
+| M5    | Paiement en ligne (Konnect / Flouci / D17)                   | ☐ à venir |
+| M6    | Qualification : tests, accessibilité, performance, SEO       | ☐ à venir |
 
 ---
 
@@ -78,7 +91,8 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
 | `npm run db:generate`   | Génère une migration après modification du schéma          |
 | `npm run db:reset`      | Repart de zéro : base + stockage, puis migre et sème       |
 | `npm run gallery`       | Reconstruit les paires avant/après de la galerie           |
-| `python3 scripts/e2e-checkout.py` | Parcours de commande complet, sans navigateur     |
+| `npm run e2e`           | Parcours de commande complet, sans navigateur           |
+| `npm run e2e:compte`    | Espace client : lien magique, rattachement, facture...  |
 
 ### Deux précautions locales
 
@@ -101,6 +115,35 @@ identifié par un cookie signé (`ar_draft`), jamais par un identifiant devinabl
 `scripts/e2e-checkout.py` rejoue ce parcours **sans JavaScript** — c'est
 aussi un test d'amélioration progressive : si le tunnel cesse de fonctionner
 sans JS, le script échoue.
+
+### Espace client
+
+L'entrée se fait par **lien magique** : pas de mot de passe à inventer pour
+suivre une commande. Le compte est créé à la première demande de lien, et les
+commandes passées en invité avec la même adresse sont rattachées
+automatiquement — c'est le point le plus fragile du dispositif, donc le premier
+que `scripts/e2e-compte.py` vérifie.
+
+| Route                                    | Rôle                                     |
+| ---------------------------------------- | ---------------------------------------- |
+| `/connexion`                             | Lien magique (+ mot de passe en repli)    |
+| `/connexion/lien?t=…`                    | Consommation du lien, ouverture de session |
+| `/compte`                                | Tableau de bord : en cours, prêtes        |
+| `/compte/commandes`                      | Toutes les commandes                      |
+| `/compte/commandes/[reference]`           | Suivi, photos, résultats, messages, facture |
+| `/compte/parametres`                     | Identité, langue, notifications, suppression |
+
+Deux routes privées servent les documents, en lecture seule et après contrôle
+du propriétaire :
+
+- `GET /api/compte/commandes/[reference]/facture` — facture HTML imprimable,
+  numérotée une seule fois puis figée ;
+- `GET /api/compte/commandes/[reference]/resultats` — archive ZIP des
+  photographies restaurées, reconstruite à la volée (rien n'est stocké).
+
+En développement, `POST /api/dev/order` fait avancer une commande et dépose des
+fichiers restaurés : de quoi vérifier ces deux routes sans jouer l'atelier à la
+main. Neutralisée en production (404).
 
 ---
 

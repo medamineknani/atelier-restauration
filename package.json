@@ -7,19 +7,20 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
-    "db:seed": "tsx scripts/seed.ts",
     "db:reset": "rm -rf .data && npm run db:migrate && npm run db:seed",
-    "test": "vitest run",
+    "db:seed": "tsx scripts/seed.ts",
+    "dev": "next dev",
+    "e2e": "python3 scripts/e2e-checkout.py",
+    "e2e:compte": "python3 scripts/e2e-compte.py",
     "gallery": "tsx scripts/build-gallery.ts",
     "images": "tsx scripts/build-public-images.ts",
-    "e2e": "python3 scripts/e2e-checkout.py"
+    "lint": "eslint .",
+    "start": "next start",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.8",

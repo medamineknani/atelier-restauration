@@ -17,6 +17,10 @@ export function Header({ locale }: { locale: Locale }) {
     { href: localePath(locale, "/a-propos"), label: t("nav.about") },
   ];
 
+  // L'accès au suivi de commande est discret : un lien texte, pas un bouton.
+  // Celui qui vient de confier ses photos le cherche ; les autres n'y pensent pas.
+  const accountHref = localePath(locale, "/compte");
+
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-[2px] supports-[backdrop-filter]:bg-paper/80">
       <div className="container-editorial flex h-16 items-center justify-between gap-6 md:h-20">
@@ -48,6 +52,12 @@ export function Header({ locale }: { locale: Locale }) {
         </nav>
 
         <div className="flex items-center gap-3">
+          <Link
+            href={accountHref}
+            className="hidden text-[0.875rem] text-graphite transition-fast hover:text-ink md:block"
+          >
+            {t("nav.account")}
+          </Link>
           <a
             href={`tel:${site.phoneHref}`}
             className="hidden text-[0.875rem] text-graphite transition-fast hover:text-ink lg:block"
@@ -62,7 +72,7 @@ export function Header({ locale }: { locale: Locale }) {
             {t("nav.cta")}
           </ButtonLink>
           <MobileNav
-            items={items}
+            items={[...items, { href: accountHref, label: t("nav.account") }]}
             ctaLabel={t("nav.cta")}
             ctaHref={localePath(locale, "/commande/service")}
             openLabel={t("nav.openMenu")}

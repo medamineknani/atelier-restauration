@@ -13,7 +13,8 @@
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu",
     "skipToContent": "Aller au contenu",
-    "language": "Langue"
+    "language": "Langue",
+    "account": "Mon espace"
   },
   "common": {
     "readMore": "En savoir plus",
@@ -57,14 +58,16 @@
     "currency": "DT",
     "stepOf": "Étape {current} sur {total}",
     "requiredField": "Ce champ est obligatoire",
-    "invalidEmail": "Cette adresse email n'est pas valide",
+    "invalidEmail": "Cette adresse email est invalide.",
     "invalidPhone": "Ce numéro de téléphone n'est pas valide",
-    "somethingWentWrong": "Une erreur est survenue. Veuillez réessayer.",
+    "somethingWentWrong": "Une erreur est survenue. Réessayez.",
     "original": "Original",
     "restored": "Restauré",
     "before": "Avant",
     "after": "Après",
-    "discount": "Remise"
+    "discount": "Remise",
+    "fullName": "Nom complet",
+    "sending": "Envoi…"
   },
   "footer": {
     "brandLine": "Nous redonnons vie aux photographies qui comptent.",
@@ -433,7 +436,6 @@
     "linkSent": "Un lien de connexion vient de vous être envoyé par email.",
     "linkSentDev": "Lien de connexion (développement) :",
     "passwordLabel": "Mot de passe",
-    "signInWithPassword": "Se connecter avec un mot de passe",
     "magicLinkOnly": "Accès sans mot de passe",
     "dashboardTitle": "Bonjour {name}",
     "dashboardLede": "Voici où en sont vos souvenirs.",
@@ -464,7 +466,32 @@
     "deleteAccountConfirm": "Cette action est définitive. Vos fichiers seront supprimés sous 30 jours.",
     "signOut": "Se déconnecter",
     "guestAccess": "Accès par lien",
-    "guestAccessLede": "Vous suivez cette commande sans compte. Conservez ce lien."
+    "guestAccessLede": "Vous suivez cette commande sans compte. Conservez ce lien.",
+    "signInCta": "Se connecter",
+    "or": "ou",
+    "invalidCredentials": "Adresse email ou mot de passe incorrect.",
+    "invalidLink": "Ce lien de connexion est invalide ou a expiré.",
+    "personalInfo": "Vos informations",
+    "preferences": "Préférences",
+    "dangerZone": "Zone sensible",
+    "save": "Enregistrer",
+    "saved": "Vos informations ont été enregistrées.",
+    "deleteConfirmWord": "SUPPRIMER",
+    "deleteConfirmHint": "Saisissez {word} pour confirmer.",
+    "confirmationError": "Confirmation incorrecte. Aucune suppression n'a eu lieu.",
+    "deleted": "Votre compte a été supprimé.",
+    "allOrders": "Toutes mes commandes",
+    "backToOrders": "Retour à mes commandes",
+    "orderDate": "Commandé le {date}",
+    "noResultsYet": "Vos photos restaurées apparaîtront ici dès que l'atelier les aura déposées.",
+    "invoiceIssued": "Facture {number} du {date}",
+    "invoiceUnavailable": "La facture sera disponible après réception du paiement.",
+    "messageSent": "Votre message a été envoyé à l'atelier.",
+    "emptyMessage": "Votre message est vide.",
+    "noMessages": "Aucun message pour le moment.",
+    "empty": "Aucune commande pour le moment.",
+    "guestTip": "Vous avez commandé sans compte ? Saisissez l'adresse email utilisée : vos commandes seront rattachées automatiquement.",
+    "dashboardTitleGuest": "Bonjour"
   },
   "auth": {
     "invalidCredentials": "Email ou mot de passe incorrect.",
@@ -607,5 +634,8 @@
     "previousImage": "Image précédente",
     "mainNavigation": "Navigation principale",
     "pageContent": "Contenu de la page"
+  },
+  "order": {
+    "estimatedReady": "Livraison estimée : {date}"
   }
 }

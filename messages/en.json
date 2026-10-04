@@ -13,7 +13,8 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "skipToContent": "Skip to content",
-    "language": "Language"
+    "language": "Language",
+    "account": "My account"
   },
   "common": {
     "readMore": "Read more",
@@ -57,14 +58,16 @@
     "currency": "DT",
     "stepOf": "Step {current} of {total}",
     "requiredField": "This field is required",
-    "invalidEmail": "This email address is not valid",
+    "invalidEmail": "This email address is invalid.",
     "invalidPhone": "This phone number is not valid",
     "somethingWentWrong": "Something went wrong. Please try again.",
     "original": "Original",
     "restored": "Restored",
     "before": "Before",
     "after": "After",
-    "discount": "Discount"
+    "discount": "Discount",
+    "fullName": "Full name",
+    "sending": "Sending…"
   },
   "footer": {
     "brandLine": "We bring photographs that matter back to life.",
@@ -433,7 +436,6 @@
     "linkSent": "A sign-in link has just been emailed to you.",
     "linkSentDev": "Sign-in link (development):",
     "passwordLabel": "Password",
-    "signInWithPassword": "Sign in with a password",
     "magicLinkOnly": "Passwordless access",
     "dashboardTitle": "Hello {name}",
     "dashboardLede": "Here is where your memories stand.",
@@ -464,7 +466,32 @@
     "deleteAccountConfirm": "This action is final. Your files will be deleted within 30 days.",
     "signOut": "Sign out",
     "guestAccess": "Link access",
-    "guestAccessLede": "You are following this order without an account. Keep this link safe."
+    "guestAccessLede": "You are following this order without an account. Keep this link safe.",
+    "signInCta": "Sign in",
+    "or": "or",
+    "invalidCredentials": "Wrong email address or password.",
+    "invalidLink": "This sign-in link is invalid or has expired.",
+    "personalInfo": "Your details",
+    "preferences": "Preferences",
+    "dangerZone": "Danger zone",
+    "save": "Save",
+    "saved": "Your details have been saved.",
+    "deleteConfirmWord": "DELETE",
+    "deleteConfirmHint": "Type {word} to confirm.",
+    "confirmationError": "Wrong confirmation. Nothing was deleted.",
+    "deleted": "Your account has been deleted.",
+    "allOrders": "All my orders",
+    "backToOrders": "Back to my orders",
+    "orderDate": "Ordered on {date}",
+    "noResultsYet": "Your restored photographs will appear here as soon as the workshop uploads them.",
+    "invoiceIssued": "Invoice {number} dated {date}",
+    "invoiceUnavailable": "The invoice will be available once payment is received.",
+    "messageSent": "Your message has been sent to the workshop.",
+    "emptyMessage": "Your message is empty.",
+    "noMessages": "No messages yet.",
+    "empty": "No orders yet.",
+    "guestTip": "Ordered without an account? Enter the email address you used and your orders will be attached automatically.",
+    "dashboardTitleGuest": "Hello"
   },
   "auth": {
     "invalidCredentials": "Incorrect email or password.",
@@ -607,5 +634,8 @@
     "previousImage": "Previous image",
     "mainNavigation": "Main navigation",
     "pageContent": "Page content"
+  },
+  "order": {
+    "estimatedReady": "Estimated delivery: {date}"
   }
 }

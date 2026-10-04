@@ -58,10 +58,13 @@ export function TextInput({
   inputMode,
   maxLength,
   list,
+  disabled,
+  className,
+  dir,
 }: {
   id: string;
   name: string;
-  type?: "text" | "email" | "tel";
+  type?: "text" | "email" | "tel" | "password";
   autoComplete?: string;
   required?: boolean;
   placeholder?: string;
@@ -71,6 +74,9 @@ export function TextInput({
   maxLength?: number;
   /** `id` d'un `<datalist>` : suggestions sans bloquer la saisie libre. */
   list?: string;
+  disabled?: boolean;
+  className?: string;
+  dir?: "ltr" | "rtl" | "auto";
 }) {
   return (
     <input
@@ -84,9 +90,11 @@ export function TextInput({
       inputMode={inputMode}
       maxLength={maxLength}
       list={list}
+      disabled={disabled}
+      dir={dir}
       aria-invalid={error || undefined}
       aria-describedby={error ? `${id}-error` : undefined}
-      className={cn(inputClasses, error && "border-danger")}
+      className={cn(inputClasses, error && "border-danger", disabled && "bg-sand text-stone", className)}
     />
   );
 }
