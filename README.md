@@ -53,17 +53,54 @@
 
 ## Démarrer (développement)
 
-> Le socle applicatif n'est pas encore généré (PHASE 3). Cette section sera complétée au jalon M0.
-
-Prérequis : **Node 22+** et **npm 10+**. Aucune base de données ni Docker requis en local : PGlite fournit un Postgres embarqué.
+Prérequis : **Node 22+** et **npm 10+**. Aucune base de données ni Docker requis
+en local : PGlite fournit un Postgres embarqué, sans serveur à installer.
 
 ```bash
 npm install
-cp .env.example .env.local
-npm run db:migrate
-npm run db:seed
-npm run dev          # http://localhost:3000
+cp .env.example .env.local          # facultatif : les défauts suffisent en local
+npm run db:migrate                  # schéma (Postgres embarqué dans .data/pg)
+npm run db:seed                     # catalogue, FAQ, témoignages, réglages
+npm run gallery                     # paires avant/après (depuis assets/sources)
+npm run dev                         # http://localhost:3000
 ```
+
+Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
+`changeme-please` (surchargeable via `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`).
+
+### Scripts utiles
+
+| Commande                | Rôle                                                       |
+| ----------------------- | ---------------------------------------------------------- |
+| `npm run typecheck`     | Types TypeScript, sans émettre                             |
+| `npm run lint`          | ESLint (configuration Next, format « flat config »)        |
+| `npm run test`          | Tests unitaires (Vitest)                                   |
+| `npm run db:generate`   | Génère une migration après modification du schéma          |
+| `npm run db:reset`      | Repart de zéro : base + stockage, puis migre et sème       |
+| `npm run gallery`       | Reconstruit les paires avant/après de la galerie           |
+| `python3 scripts/e2e-checkout.py` | Parcours de commande complet, sans navigateur     |
+
+### Deux précautions locales
+
+1. **PGlite est mono-processus.** Arrêtez `npm run dev` avant `npm run db:seed`
+   ou `npm run db:migrate` : deux instances sur le même répertoire se marchent
+   dessus. Si la base refuse de démarrer, supprimez `.data/pg/postmaster.pid`,
+   ou repartez de `npm run db:reset`.
+2. **Les fichiers ne vont jamais dans un répertoire nommé `storage/`.** Ce nom
+   est exclu des sauvegardes d'environnement sur plusieurs hébergeurs : son
+   contenu disparaît silencieusement. Le stockage local est donc dans
+   `.data/files` (`STORAGE_LOCAL_DIR`) et les images sources, versionnées, dans
+   `assets/sources`.
+
+### Tunnel de commande
+
+Les sept étapes vivent sous `/commande` : service, pack, options, photos,
+coordonnées, récapitulatif, puis confirmation et suivi. Le brouillon est
+identifié par un cookie signé (`ar_draft`), jamais par un identifiant devinable.
+
+`scripts/e2e-checkout.py` rejoue ce parcours **sans JavaScript** — c'est
+aussi un test d'amélioration progressive : si le tunnel cesse de fonctionner
+sans JS, le script échoue.
 
 ---
 

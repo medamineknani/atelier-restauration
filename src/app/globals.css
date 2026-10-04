@@ -1,0 +1,124 @@
+@import "tailwindcss";
+@import "../design-system/theme.css";
+@import "../design-system/typography.css";
+@import "../design-system/motion.css";
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Champs : jamais de zoom automatique sur iOS (min 16px) */
+  @media (max-width: 767px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px;
+    }
+  }
+
+  img,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--color-line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+/* ==========================================================================
+   Mises en page réutilisables
+   ========================================================================== */
+
+@utility container-editorial {
+  width: 100%;
+  margin-inline: auto;
+  max-width: var(--container-max);
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .container-editorial {
+    padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-editorial {
+    padding-inline: 3rem;
+  }
+}
+
+@utility section-y {
+  padding-block: var(--section-y-sm);
+}
+
+/* Filet de sécurité : sans JavaScript, tout ce qui devait apparaître au
+   défilement reste visible. Le contenu n'est jamais prisonnier d'un script. */
+@media (scripting: none) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .section-y {
+    padding-block: var(--section-y-md);
+  }
+}
+
+@media (min-width: 1280px) {
+  .section-y {
+    padding-block: var(--section-y-lg);
+  }
+}
+
+/* Sortie du conteneur : l'image déborde, l'effet éditorial vient de là */
+@utility breakout-right {
+  margin-inline-end: calc(50% - 50vw);
+}
+
+@utility breakout-full {
+  margin-inline: calc(50% - 50vw);
+  width: 100vw;
+}
+
+/* ==========================================================================
+   Barre de défilement masquée (galeries horizontales, stepper mobile)
+   ========================================================================== */
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

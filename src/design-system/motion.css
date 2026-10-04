@@ -1,0 +1,67 @@
+/* ==========================================================================
+   Mouvement — discret, lent, jamais spectaculaire
+   ========================================================================== */
+
+@utility transition-editorial {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+  transition-timing-function: var(--ease-editorial);
+  transition-duration: 280ms;
+}
+
+@utility transition-fast {
+  transition-property: color, background-color, border-color, opacity;
+  transition-timing-function: var(--ease-editorial);
+  transition-duration: 160ms;
+}
+
+/* Révélation au scroll : 10px de translation, pas plus. */
+@utility reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 520ms var(--ease-editorial),
+    transform 520ms var(--ease-editorial);
+}
+
+@utility reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Filet qui s'étire sous un lien — signature de la marque */
+.rule-expand {
+  position: relative;
+}
+
+.rule-expand::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: -0.35em;
+  height: 1px;
+  width: 0;
+  background-color: var(--color-champagne);
+  transition: width 280ms var(--ease-editorial);
+}
+
+.rule-expand:hover::after,
+.rule-expand:focus-visible::after {
+  width: 2.5rem;
+}
+
+/* Respect absolu du système : on coupe tout, sauf le fonctionnel. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

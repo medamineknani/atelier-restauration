@@ -1,0 +1,30 @@
+# Dépendances
+node_modules/
+.pnp
+.pnp.*
+
+# Build
+.next/
+out/
+build/
+dist/
+next-env.d.ts
+*.tsbuildinfo
+
+# Base de données locale (PGlite) — ne jamais versionner
+.data/
+
+# Stockage local des fichiers (driver `local`) — contient des photos clients
+storage/
+
+# Secrets
+.env
+.env.local
+.env*.local
+
+# Logs & divers
+npm-debug.log*
+yarn-error.log*
+.DS_Store
+.vercel
+coverage/

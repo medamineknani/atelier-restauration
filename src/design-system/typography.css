@@ -1,0 +1,178 @@
+/* ==========================================================================
+   Typographie éditoriale
+   ========================================================================== */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    color: var(--color-ink);
+    background-color: var(--color-paper);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-wrap: balance;
+    color: var(--color-ink);
+  }
+
+  /* Les titres restent en graisses fines : jamais de 700 au-dessus de 24px */
+  h1,
+  h2 {
+    font-weight: 400;
+  }
+
+  h3 {
+    font-weight: 500;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-champagne);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+
+  ::selection {
+    background-color: var(--color-champagne-soft);
+    color: var(--color-ink);
+  }
+}
+
+/* --- Utilitaires typographiques ------------------------------------------ */
+
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--text-eyebrow);
+  line-height: var(--text-eyebrow--line-height);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+@utility display {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  line-height: var(--text-display--line-height);
+  letter-spacing: var(--text-display--letter-spacing);
+  font-weight: 300;
+}
+
+@utility heading-1 {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+  letter-spacing: var(--text-h1--letter-spacing);
+  font-weight: 400;
+}
+
+@utility heading-2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+  letter-spacing: var(--text-h2--letter-spacing);
+  font-weight: 400;
+}
+
+@utility heading-3 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  line-height: var(--text-h3--line-height);
+  font-weight: 500;
+}
+
+@utility body-lg {
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+}
+
+/* --- Corps de texte long ------------------------------------------------- */
+
+.editorial {
+  max-width: 68ch;
+  font-size: var(--text-body-lg);
+  line-height: 1.75;
+  color: var(--color-graphite);
+}
+
+.editorial p + p {
+  margin-top: 1.25em;
+}
+
+.editorial h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  line-height: 1.2;
+  color: var(--color-ink);
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+}
+
+.editorial h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  color: var(--color-ink);
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
+}
+
+.editorial ul,
+.editorial ol {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 0;
+  list-style: none;
+}
+
+.editorial li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.editorial li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.72em;
+  width: 0.6rem;
+  height: 1px;
+  background-color: var(--color-champagne);
+}
+
+.editorial strong {
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+/* --- Grain papier très léger (2 % de bruit) ------------------------------ */
+
+.paper-grain {
+  position: relative;
+}
+
+.paper-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
