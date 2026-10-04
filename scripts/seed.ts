@@ -328,6 +328,8 @@ const PRODUCTS: SeedProduct[] = [
     price: 100,
     minDays: 1,
     maxDays: 2,
+    // Écrin rigide : un objet physique, qui part par colis.
+    requiresShipping: true,
     sort: 24,
     fr: { name: "Boîte premium", tagline: "Écrin de protection", features: ["Boîte rigide habillée"] },
     en: { name: "Premium box", tagline: "Protective case", features: ["Rigid covered box"] },

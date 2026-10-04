@@ -17,8 +17,11 @@ export function toMillimes(dinars: number) {
 
 /** 99000 -> { amount: "99", currency: "DT" } (pas de décimales si à zéro) */
 export function formatPrice(millimes: number, locale = "fr") {
-  const value = millimes / 1000;
-  const hasDecimals = Math.round(millimes % 1000) !== 0;
+  // Affichage : un montant négatif n'a pas de sens sur un devis ou une
+  // facture, même s'il provient d'une donnée corrompue.
+  const safe = Math.max(0, Math.trunc(millimes));
+  const value = safe / 1000;
+  const hasDecimals = Math.round(safe % 1000) !== 0;
   const formatted = new Intl.NumberFormat(locale === "ar" ? "ar-TN" : locale === "en" ? "en-US" : "fr-TN", {
     minimumFractionDigits: hasDecimals ? 3 : 0,
     maximumFractionDigits: hasDecimals ? 3 : 0,

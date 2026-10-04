@@ -93,6 +93,7 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
 | `npm run typecheck`     | Types TypeScript, sans émettre                             |
 | `npm run lint`          | ESLint (configuration Next, format « flat config »)        |
 | `npm run test`          | Tests unitaires (Vitest)                                   |
+| `npm run test:watch`    | Tests unitaires, relancés à chaque enregistrement          |
 | `npm run db:generate`   | Génère une migration après modification du schéma          |
 | `npm run gallery`       | Reconstruit les paires avant/après de la galerie           |
 | `npm run db:reset`      | Repart de zéro : base + stockage, puis migre et sème       |
@@ -104,14 +105,17 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
 
 ### Trois précautions locales
 
-1. **PGlite est mono-processus, et son répertoire ne survit pas à un arrêt
-   brutal.** Arrêtez `npm run dev` avant `npm run db:seed` ou
-   `npm run db:migrate` : deux instances sur le même répertoire le corrompent,
-   et un arrêt interrompu suffit à le rendre illisible — chaque requête
-   échoue alors avec `RuntimeError: Aborted()`. Le seul remède fiable est
-   `npm run db:reset`, qui reconstruit schéma, galerie et données de départ.
-   Supprimer `postmaster.pid` ne suffit pas. Rien de grave : la base de
-   développement est jetable, elle se reconstruit en une dizaine de secondes.
+1. **PGlite est mono-processus.** Arrêtez `npm run dev` avant
+   `npm run db:seed` ou `npm run db:migrate` : deux instances sur le même
+   répertoire le corrompent, et chaque requête échoue alors avec
+   `RuntimeError: Aborted()`. Le seul remède est `npm run db:reset`, qui
+   reconstruit schéma, galerie et données de départ.
+
+   Un arrêt normal (Ctrl-C, `SIGTERM`) est sans risque : le serveur ferme la
+   base avant de s'éteindre, et les données sont relues au démarrage suivant.
+   Seul un arrêt forcé — `kill -9`, ou un processus tué par manque de mémoire —
+   laisse le répertoire irrécupérable. Supprimer `postmaster.pid` ne sert à
+   rien dans ce cas.
 2. **`npm run gallery` avant `npm run db:seed`.** La galerie fabrique les
    images puis un `manifest.json` que le seed lit pour créer les fiches.
    Semer avant de construire la galerie donne un site qui fonctionne, avec
@@ -126,6 +130,17 @@ PGlite émet parfois `Unhandled Rejection: RuntimeError: Aborted()` dans les
 journaux du serveur de développement, à l'arrêt d'une requête. C'est un bruit
 connu de l'émulateur WASM, pas une erreur applicative : la requête répond
 normalement et aucun travail n'est perdu.
+
+### Tests unitaires
+
+`npm run test` lance Vitest sur les fichiers `src/**/*.test.ts`. Aucune base,
+aucun réseau : seules les fonctions pures sont couvertes — le calcul des
+montants, le formatage des prix et les délais. `npm run test:watch` relance à
+chaque enregistrement.
+
+Le module `server-only`, fourni par Next et absent hors de Next, est remplacé
+par un module vide dans `vitest.config.ts` : dans un test Node, tout est
+serveur.
 
 ### Tunnel de commande
 

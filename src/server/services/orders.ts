@@ -153,6 +153,10 @@ export async function setExtras(
         photosGranted: product.extraPhotosGranted * extra.quantity,
         pagesGranted: product.extraPagesGranted * extra.quantity,
         pricingMode: product.pricingMode,
+        // Un extra matériel — une boîte, un tirage — déclenche l'expédition
+        // et rend le paiement à la livraison possible, même sur un pack
+        // numérique. Sans cette ligne, cette information était perdue.
+        requiresShipping: product.requiresShipping,
       },
     });
   }
