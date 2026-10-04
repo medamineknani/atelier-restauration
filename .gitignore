@@ -14,8 +14,10 @@ next-env.d.ts
 # Base de données locale (PGlite) — ne jamais versionner
 .data/
 
-# Stockage local des fichiers (driver `local`) — contient des photos clients
-storage/
+# Stockage local des fichiers (driver `local`) — contient des photos clients.
+# Motif ancré à la racine : un `storage/` non ancré excluait aussi
+# `src/lib/storage` du versionnement.
+/storage/
 
 # Secrets
 .env

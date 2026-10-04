@@ -2,7 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { assets, transformations } from "@/server/db/schema";
-import { getStorage } from "@/lib/storage";
+import { getStorage } from "@/lib/files";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

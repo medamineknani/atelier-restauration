@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
 import { readDraftOrderId } from "@/lib/draft";
 import { getOrderById } from "@/server/services/orders";
-import { getStorage, storageKeys } from "@/lib/storage";
+import { getStorage, storageKeys } from "@/lib/files";
 import { orderLimits } from "@/server/services/catalog";
 
 export const runtime = "nodejs";

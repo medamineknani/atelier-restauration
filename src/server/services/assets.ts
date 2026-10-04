@@ -5,7 +5,7 @@ import { and, asc, eq, isNull } from "drizzle-orm";
 import sharp from "sharp";
 import { db } from "@/server/db";
 import { assets, type Asset } from "@/server/db/schema";
-import { getStorage, storageKeys } from "@/lib/storage";
+import { getStorage, storageKeys } from "@/lib/files";
 import { orderLimits } from "./catalog";
 import { refreshPhotosCount } from "./orders";
 

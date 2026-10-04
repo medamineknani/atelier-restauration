@@ -2,7 +2,7 @@ import { eq, and, isNull } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/server/db";
 import { assets, downloadTokens, orders } from "@/server/db/schema";
-import { getStorage } from "@/lib/storage";
+import { getStorage } from "@/lib/files";
 import { getCurrentUser } from "@/lib/auth/session";
 import { sha256 } from "@/lib/crypto";
 import { readDraftOrderId } from "@/lib/draft";
