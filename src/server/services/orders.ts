@@ -318,7 +318,14 @@ export async function submitOrder(orderId: string, provider: string) {
 /* Statuts                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const ALLOWED_TRANSITIONS: Record<OrderStatusCode, OrderStatusCode[]> = {
+/**
+ * Transitions autorisées.
+ *
+ * Exposé tel quel : le back-office ne doit proposer que les statuts
+ * réellement atteints, jamais une liste complète qui laisserait l'opérateur
+ * invalider la machine à états d'un clic distrait.
+ */
+export const ALLOWED_TRANSITIONS: Record<OrderStatusCode, OrderStatusCode[]> = {
   draft: ["awaiting_payment", "cancelled"],
   awaiting_payment: ["received", "cancelled", "on_hold"],
   received: ["processing", "on_hold", "cancelled", "refunded"],
@@ -344,6 +351,7 @@ export async function changeStatus(
     actorId?: string | null;
     message?: string | null;
     notify?: boolean;
+    visibleToClient?: boolean;
     tracking?: { carrier?: string; trackingNumber?: string } | null;
   } = {},
 ) {
@@ -372,7 +380,7 @@ export async function changeStatus(
     fromStatus: from,
     toStatus: to,
     message: options.message ?? null,
-    visibleToClient: true,
+    visibleToClient: options.visibleToClient ?? true,
     actorId: options.actorId ?? null,
   });
 
