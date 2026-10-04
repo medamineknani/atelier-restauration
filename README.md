@@ -19,7 +19,7 @@ données et design system sont documentés et validés.
 | M2    | Tunnel de commande en 7 étapes + confirmation et suivi invité| ✔ livré   |
 | M3    | Espace client : lien magique, suivi, résultats, factures     | ✔ livré   |
 | M4-a  | Back-office : file de production, écran de commande, catalogue | ✔ livré   |
-| M4-b  | Back-office : contenu, paramètres, équipe                     | ☐ en cours |
+| M4-b  | Back-office : contenu, paramètres, équipe                     | ✔ livré   |
 | M5    | Paiement en ligne (Konnect / Flouci / D17)                   | ☐ à venir |
 | M6    | Qualification : tests, accessibilité, performance, SEO       | ☐ à venir |
 
@@ -94,6 +94,7 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
 | `npm run db:reset`      | Repart de zéro : base + stockage, puis migre et sème       |
 | `npm run e2e`           | Parcours de commande complet, sans navigateur           |
 | `npm run e2e:compte`    | Espace client : lien magique, rattachement, facture...  |
+| `npm run e2e:admin`     | Back-office : commande, catalogue, contenu, réglages    |
 
 ### Trois précautions locales
 
@@ -175,6 +176,8 @@ l'administration**, même en tapant l'URL. Un seul compte est créé par le seed
 | `/admin/commandes/[id]`   | ★ L'écran principal : six onglets, une seule page      |
 | `/admin/clients`          | Fiches, historique, commandes invitées non rattachées |
 | `/admin/catalogue`        | Packs et options — **prix éditables sans redéploiement** |
+| `/admin/contenu`          | Hub : FAQ, témoignages, galerie, demandes reçues      |
+| `/admin/parametres`       | Marque, commercial, paiement, stockage, notifications, équipe |
 | `/admin/journal`          | Journal d'audit, lecture seule                        |
 
 Trois règles tiennent l'ensemble :
@@ -193,8 +196,48 @@ quoi, quand, et pourquoi. **Un prix modifié ne change jamais celui d'une
 commande déjà passée** : chaque ligne de commande porte son propre cliché.
 
 `npm run e2e:admin` vérifie le parcours complet — connexion, changement de
-statut, dépôt et publication des résultats, facture, journal — ainsi que la
-frontière client ↔ administration.
+statut, dépôt et publication des résultats, facture, journal, contenu,
+réglages — ainsi que la frontière client ↔ administration.
+
+### Réglages
+
+`/admin/parametres` réunit six sections. Trois sont ouvertes à tout
+administrateur — marque et coordonnées, commercial, notifications. Trois sont
+réservées au superadministrateur — paiement, stockage, équipe — parce qu'une
+erreur là ne coûte pas une page, elle coûte l'encaissement ou les fichiers.
+
+Le refus est appliqué **côté serveur**, et pas seulement en masquant le
+formulaire : le script e2e rejoue un appel avec un identifiant d'action volé
+à la session du superadministrateur, et vérifie qu'il échoue.
+
+Quelques choix qui se défendent :
+
+- **Les secrets ne sont jamais dans la base.** Les clés d'API sont affichées
+  masquées (`sk_live_••••8f2`) avec le nom de la variable d'environnement
+  attendue, jamais saisissables depuis un écran web. Une clé entrée dans un
+  formulaire finit dans un export, un ticket ou un historique de navigateur.
+- **Le pilote de stockage ne se change pas depuis l'écran.** Pointer le
+  stockage vers un autre bucket par erreur rendrait tous les originaux
+  introuvables d'un coup.
+- **On ne se rétrograde ni ne se désactive soi-même.** C'est le piège classique
+  qui laisse une installation sans superadministrateur.
+- **Un compte désactivé n'est pas supprimé.** Ses commandes, ses notes et ses
+  entrées de journal restent lisibles et cohérentes.
+
+Les coordonnées de marque alimentent le pied de page, la page Contact, la
+facture, la signature des emails et les données structurées : ce que l'atelier
+saisit est ce que le site affiche, et ce que les moteurs lisent.
+
+### Webhook de paiement
+
+Une seule route sert tous les prestataires :
+`POST /api/webhooks/paiement/{prestataire}`. C'est le pilote — et lui seul —
+qui sait lire et authentifier le corps de la requête. Ajouter une passerelle
+n'ajoute donc ni route, ni contrôleur, ni branche dans le tunnel de commande.
+
+Deux règles y tiennent : le montant n'est jamais lu depuis la requête, il est
+relu depuis la commande ; et une requête non reconnue répond `200`, pas `400`,
+pour qu'un prestataire qui réessaie en boucle ne finisse pas par nous noyer.
 
 ---
 

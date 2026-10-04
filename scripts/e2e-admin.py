@@ -31,6 +31,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ADMIN_JAR = "/tmp/atelier-e2e-admin-cookies.txt"
 CLIENT_JAR = "/tmp/atelier-e2e-admin-client.txt"
 EMPTY_JAR = "/tmp/atelier-e2e-admin-vide.txt"
+MEMBER_JAR = "/tmp/atelier-e2e-admin-membre.txt"
 
 ADMIN_EMAIL = os.environ.get("SEED_ADMIN_EMAIL", "admin@atelier-restauration.tn")
 ADMIN_PASSWORD = os.environ.get("SEED_ADMIN_PASSWORD", "changeme-please")
@@ -113,7 +114,7 @@ def post_form(path: str, page: str, data: dict[str, str], marker: str,
 def main() -> int:
     print(f"Back-office — {BASE}\n")
 
-    for jar in (ADMIN_JAR, CLIENT_JAR, EMPTY_JAR):
+    for jar in (ADMIN_JAR, CLIENT_JAR, EMPTY_JAR, MEMBER_JAR):
         if os.path.exists(jar):
             os.remove(jar)
 
@@ -358,6 +359,238 @@ def main() -> int:
         post_form("/admin/contenu/faq", page, {"id": faq_id}, f'value="{faq_id}"', ADMIN_JAR, which=1)
         page = text(get("/faq", ADMIN_JAR))
         check("question retirée du site", marker not in page)
+
+
+    # --- Réglages ----------------------------------------------------------
+    print("12. Paramètres")
+
+    for section in ("marque", "commercial", "paiement", "stockage",
+                    "notifications", "equipe"):
+        code = status_of(f"/admin/parametres?section={section}").split()[0]
+        check(f"section {section}", code == "200", code)
+
+    def field_value(page: str, name: str) -> str:
+        match = re.search(rf'name="{name}"[^>]*value="([^"]*)"', page)
+        return html.unescape(match.group(1)) if match else ""
+
+    def save(section: str, marker: str, data: dict[str, str]) -> None:
+        post_form(f"/admin/parametres?section={section}",
+                  get(f"/admin/parametres?section={section}", ADMIN_JAR),
+                  data, marker, ADMIN_JAR)
+
+    # Marque : une modification doit se voir sur le site public, pas seulement
+    # dans l'administration. C'est le seul réglage visible par les visiteurs.
+    brand_page = get("/admin/parametres?section=marque", ADMIN_JAR)
+    city_before = field_value(brand_page, "city")
+    city_marker = f"Ville-{int(time.time())}"
+    save("marque", 'name="openingHours"', {
+        "name": "Atelier Restauration",
+        "email": "bonjour@atelier-restauration.tn",
+        "phone": "+216 71 000 000",
+        "whatsapp": "+216 20 000 000",
+        "street": "12, rue de la Photographie",
+        "postalCode": "1000",
+        "city": city_marker,
+        "region": "Tunis",
+        "country": "TN",
+        "openingHours": "Du lundi au vendredi · 9h – 18h",
+        "instagram": "",
+        "facebook": "",
+    })
+    check("marque enregistrée", "303" in last_status, last_status[:70])
+    home_text = text(get("/", ADMIN_JAR))
+    check("coordonnées reprises sur le site", city_marker in home_text, city_marker)
+
+    save("marque", 'name="openingHours"', {
+        "name": "Atelier Restauration",
+        "email": "bonjour@atelier-restauration.tn",
+        "phone": "+216 71 000 000",
+        "whatsapp": "+216 20 000 000",
+        "street": "12, rue de la Photographie",
+        "postalCode": "1000",
+        "city": city_before,
+        "region": "Tunis",
+        "country": "TN",
+        "openingHours": "Du lundi au vendredi · 9h – 18h",
+        "instagram": "",
+        "facebook": "",
+    })
+    check("coordonnées rétablies", city_marker not in text(get("/", ADMIN_JAR)))
+
+    # Commercial, paiement, stockage : on écrit une valeur, on la relit, on
+    # remet celle d'origine. Rien ne doit rester modifié après le passage.
+    page = get("/admin/parametres?section=commercial", ADMIN_JAR)
+    shipping_before = field_value(page, "shippingFlat")
+    save("commercial", 'name="acceptedFormats"', {
+        "shippingFlat": "12,500",
+        "acceptedFormats": "image/jpeg, image/png, image/webp, image/tiff",
+        "requirePhotos": "on",
+    })
+    check("frais de port enregistrés",
+          "12.500" in field_value(get("/admin/parametres?section=commercial", ADMIN_JAR),
+                                  "shippingFlat"))
+    save("commercial", 'name="acceptedFormats"', {
+        "shippingFlat": shipping_before,
+        "acceptedFormats": "image/jpeg, image/png, image/webp, image/tiff",
+        "requirePhotos": "on",
+    })
+
+    page = get("/admin/parametres?section=paiement", ADMIN_JAR)
+    iban_before = field_value(page, "manualIban")
+    iban_marker = f"TN59 0000 0000 0000 0000 {int(time.time()) % 10000:04d}"
+    save("paiement", 'name="manualIban"', {
+        "manualHolder": "Atelier Restauration",
+        "manualBank": "Banque de test",
+        "manualIban": iban_marker,
+        "providerOrder": "manual",
+    })
+    check("IBAN enregistré",
+          iban_marker in field_value(get("/admin/parametres?section=paiement", ADMIN_JAR),
+                                     "manualIban"))
+    save("paiement", 'name="manualIban"', {
+        "manualHolder": "Atelier Restauration",
+        "manualBank": "Banque de test",
+        "manualIban": iban_before,
+        "providerOrder": "manual",
+    })
+
+    page = get("/admin/parametres?section=stockage", ADMIN_JAR)
+    size_before = field_value(page, "maxFileSizeMb")
+    save("stockage", 'name="retentionDraft"', {
+        "maxFileSizeMb": "42",
+        "maxFilesPerOrder": "200",
+        "retentionOriginals": "90",
+        "retentionRestored": "365",
+        "retentionDraft": "30",
+    })
+    check("taille maximale enregistrée",
+          "42" == field_value(get("/admin/parametres?section=stockage", ADMIN_JAR),
+                              "maxFileSizeMb"))
+    save("stockage", 'name="retentionDraft"', {
+        "maxFileSizeMb": size_before,
+        "maxFilesPerOrder": "200",
+        "retentionOriginals": "90",
+        "retentionRestored": "365",
+        "retentionDraft": "30",
+    })
+
+    save("notifications", 'name="to"', {"to": ADMIN_EMAIL})
+    check("email de test envoyé", "etat=envoye" in last_status, last_status[:70])
+    save("notifications", 'name="to"', {"to": "pas-un-email"})
+    check("adresse invalide refusée",
+          "etat=email-invalide" in last_status, last_status[:70])
+
+    # --- Équipe & permissions ----------------------------------------------
+    print("13. Équipe et permissions")
+
+    member_email = f"e2e-operateur-{int(time.time())}@example.tn"
+    member_password = "motdepasse-de-test-tres-long"
+    save("equipe", 'name="password"', {
+        "name": "Opérateur de test",
+        "email": member_email,
+        "role": "admin",
+        "password": member_password,
+    })
+    check("compte créé", "etat=cree" in last_status, last_status[:70])
+
+    save("equipe", 'name="password"', {
+        "name": "Opérateur de test",
+        "email": member_email,
+        "role": "admin",
+        "password": member_password,
+    })
+    check("doublon refusé", "etat=existant" in last_status, last_status[:70])
+
+    team_page = get("/admin/parametres?section=equipe", ADMIN_JAR)
+    check("compte listé", member_email in team_page)
+
+    # Le superadmin ne peut ni se rétrograder ni se désactiver lui-même :
+    # c'est le piège qui laisse une installation sans pilote.
+    here = team_page.find("c&#x27;est vous")
+    if here < 0:
+        here = team_page.find("c'est vous")
+    self_id = ""
+    if here > 0:
+        found = re.search(r'name="id" value="([0-9a-f-]{36})"', team_page[here:])
+        if found:
+            self_id = found.group(1)
+    check("son propre compte identifié", bool(self_id), self_id[:8] + "…" if self_id else "")
+
+    if self_id:
+        post_form("/admin/parametres?section=equipe", team_page,
+                  {"id": self_id}, "sactiver l&#x27;acc", ADMIN_JAR)
+        check("auto-désactivation refusée",
+              "etat=soi-meme" in last_status, last_status[:70])
+
+    # Un simple administrateur voit les sections sensibles mais ne peut pas
+    # les modifier : c'est toute la matrice des rôles qui se joue ici.
+    page = get("/admin/connexion", MEMBER_JAR)
+    post_form("/admin/connexion", page,
+              {"email": member_email, "password": member_password, "next": "/admin"},
+              'name="password"', MEMBER_JAR)
+    check("opérateur connecté", "303" in last_status or "307" in last_status, last_status[:70])
+
+    member_page = get("/admin/parametres?section=paiement", MEMBER_JAR)
+    check("section sensible verrouillée", "superadministrateur" in text(member_page))
+    check("IBAN masqué mais non modifiable",
+          'disabled' in member_page or "readonly" in member_page.lower())
+
+    iban_now = field_value(get("/admin/parametres?section=paiement", ADMIN_JAR), "manualIban")
+    post_form("/admin/parametres?section=paiement", member_page, {
+        "manualHolder": "Pirate",
+        "manualBank": "Pirate",
+        "manualIban": "TN59 PIRATE",
+        "providerOrder": "manual",
+    }, 'name="manualIban"', MEMBER_JAR)
+    check("modification refusée à l’opérateur",
+          "etat=permissions" in last_status, last_status[:70])
+    check("paiement intact",
+          field_value(get("/admin/parametres?section=paiement", ADMIN_JAR), "manualIban") == iban_now)
+
+    check("section équipe invisible à l’opérateur",
+          "Nouveau compte" not in text(get("/admin/parametres?section=equipe", MEMBER_JAR)))
+
+    # Masquer un formulaire ne suffit pas : on rejoue ici l'appel avec
+    # l'identifiant d'action récupéré dans la session du superadministrateur.
+    # C'est la vraie frontière — le contrôle doit être côté serveur.
+    admin_team_page = get("/admin/parametres?section=equipe", ADMIN_JAR)
+    post_form("/admin/parametres?section=equipe", admin_team_page,
+              {"name": "Intrus", "email": f"intrus-{int(time.time())}@example.tn",
+               "role": "superadmin", "password": member_password},
+              'name="password"', MEMBER_JAR)
+    check("création de compte refusée à l’opérateur",
+          "etat=permissions" in last_status, last_status[:70])
+    check("aucun compte intrus créé",
+          "intrus-" not in get("/admin/parametres?section=equipe", ADMIN_JAR))
+
+    # L'opérateur peut en revanche tenir la marque à jour.
+    post_form("/admin/parametres?section=marque", get("/admin/parametres?section=marque", MEMBER_JAR),
+              {"name": "Atelier Restauration", "email": "bonjour@atelier-restauration.tn",
+               "phone": "+216 71 000 000", "whatsapp": "+216 20 000 000",
+               "street": "12, rue de la Photographie", "postalCode": "1000",
+               "city": city_before, "region": "Tunis", "country": "TN",
+               "openingHours": "Du lundi au vendredi · 9h – 18h",
+               "instagram": "", "facebook": ""},
+              'name="openingHours"', MEMBER_JAR)
+    check("marque modifiable par l’opérateur", "303" in last_status, last_status[:70])
+
+    # Nettoyage : le compte de test est désactivé, pas supprimé — ses
+    # éventuelles commandes et notes restent cohérentes.
+    team_page = get("/admin/parametres?section=equipe", ADMIN_JAR)
+    at = team_page.find(member_email)
+    member_id = ""
+    if at > 0:
+        found = re.search(r'name="id" value="([0-9a-f-]{36})"', team_page[at:])
+        if found:
+            member_id = found.group(1)
+    if member_id:
+        post_form("/admin/parametres?section=equipe", team_page,
+                  {"id": member_id}, "sactiver l&#x27;acc", ADMIN_JAR)
+        check("compte désactivé", "etat=desactive" in last_status, last_status[:70])
+        team_page = get("/admin/parametres?section=equipe", ADMIN_JAR)
+        at = team_page.find(member_email)
+        check("compte marqué désactivé",
+              at > 0 and "désactivé" in team_page[at:at + 400])
 
     print()
     if failures:

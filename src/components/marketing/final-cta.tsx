@@ -1,10 +1,11 @@
-import { site } from "@/config/site";
 import { createTranslator, localePath, type Locale } from "@/lib/i18n";
 import { ButtonLink } from "@/components/ui/button";
 import { ArrowIcon, Container, Reveal, Section } from "@/components/ui/primitives";
+import { getBrandSettings } from "@/server/services/settings";
 
-export function FinalCta({ locale }: { locale: Locale }) {
+export async function FinalCta({ locale }: { locale: Locale }) {
   const t = createTranslator(locale);
+  const brand = await getBrandSettings();
 
   return (
     <Section tone="ink">
@@ -29,18 +30,18 @@ export function FinalCta({ locale }: { locale: Locale }) {
               <p className="eyebrow text-champagne">{t("home.finalCta.directTitle")}</p>
               <ul className="mt-5 space-y-2 text-[0.9375rem] text-paper/80">
                 <li>
-                  <a href={`tel:${site.phoneHref}`} className="transition-fast hover:text-paper">
-                    {site.phone}
+                  <a href={`tel:${brand.phoneHref}`} className="transition-fast hover:text-paper">
+                    {brand.phone}
                   </a>
                 </li>
                 <li>
-                  <a href={`mailto:${site.email}`} className="transition-fast hover:text-paper">
-                    {site.email}
+                  <a href={`mailto:${brand.email}`} className="transition-fast hover:text-paper">
+                    {brand.email}
                   </a>
                 </li>
                 <li>
                   <a
-                    href={`https://wa.me/${site.whatsapp.replace(/[^0-9]/g, "")}`}
+                    href={`https://wa.me/${brand.whatsapp.replace(/[^0-9]/g, "")}`}
                     className="transition-fast hover:text-paper"
                     rel="noopener noreferrer"
                     target="_blank"

@@ -59,7 +59,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const steps = raw<{ title: string; body: string }[]>(locale, "home.how.steps") ?? [];
 
   const jsonLd = [
-    organizationJsonLd(),
+    await organizationJsonLd(),
     websiteJsonLd(),
     howToJsonLd(steps),
     faqJsonLd(homeFaqs),

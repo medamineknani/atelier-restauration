@@ -93,8 +93,13 @@ function nextStep(status: OrderStatusCode, locale: Locale) {
 /* Messages                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function wrap(locale: Locale, subject: string, body: string, to: string): MailMessage {
-  const html = emailLayout({ title: subject, preheader: subject, body });
+async function wrap(
+  locale: Locale,
+  subject: string,
+  body: string,
+  to: string,
+): Promise<MailMessage> {
+  const html = await emailLayout({ title: subject, preheader: subject, body });
   return { to, subject, html, text: htmlToText(html) };
 }
 
@@ -181,7 +186,7 @@ export async function sendOrderConfirmation(order: Order, locale: Locale, guestT
       }
     </p>`;
 
-  await getMailer().send(wrap(locale, subject, body, customer.email));
+  await getMailer().send(await wrap(locale, subject, body, customer.email));
   return guestToken;
 }
 
@@ -211,7 +216,7 @@ export async function sendStatusUpdate(
       </a>
     </p>`;
 
-  await getMailer().send(wrap(locale, subject, body, order.customerSnapshot.email));
+  await getMailer().send(await wrap(locale, subject, body, order.customerSnapshot.email));
 }
 
 export async function sendResultsReady(order: Order, locale: Locale, link: string) {
@@ -234,7 +239,7 @@ export async function sendResultsReady(order: Order, locale: Locale, link: strin
         ? "The link stays active for 12 months. Your originals are deleted 90 days from now."
         : "Le lien reste actif 12 mois. Vos originaux sont supprimés dans 90 jours."
     }</p>`;
-  await getMailer().send(wrap(locale, subject, body, order.customerSnapshot.email));
+  await getMailer().send(await wrap(locale, subject, body, order.customerSnapshot.email));
 }
 
 export async function sendMagicLink(email: string, link: string, locale: Locale) {
@@ -257,7 +262,7 @@ export async function sendMagicLink(email: string, link: string, locale: Locale)
         ? "If you did not request this link, simply ignore this email."
         : "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email."
     }</p>`;
-  await getMailer().send(wrap(locale, subject, body, email));
+  await getMailer().send(await wrap(locale, subject, body, email));
 }
 
 export async function notifyAdminNewOrder(order: Order) {
@@ -277,7 +282,7 @@ export async function notifyAdminNewOrder(order: Order) {
         Ouvrir la commande
       </a>
     </p>`;
-  await getMailer().send(wrap("fr", subject, body, site.email));
+  await getMailer().send(await wrap("fr", subject, body, site.email));
 }
 
 /* -------------------------------------------------------------------------- */

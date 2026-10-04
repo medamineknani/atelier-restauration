@@ -50,7 +50,7 @@ export async function submitContact(
   });
 
   const subject = `Nouveau message — ${data.subject || "contact"} · ${data.name}`;
-  const html = emailLayout({
+  const html = await emailLayout({
     title: subject,
     body: `
       <p><strong>${data.name}</strong></p>

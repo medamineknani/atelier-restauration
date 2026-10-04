@@ -23,12 +23,14 @@ function createConsoleMailer(): Mailer {
   return {
     name: "console",
     async send(message) {
-      const dir = path.join(process.cwd(), "storage", "mail");
+      // Pas de répertoire `storage/` : son contenu est exclu des sauvegardes
+      // d'environnement sur plusieurs hébergeurs.
+      const dir = path.join(process.cwd(), ".data", "mail");
       await mkdir(dir, { recursive: true });
       const safe = `${Date.now()}-${message.to.replace(/[^a-z0-9@.]/gi, "_")}.html`;
       await writeFile(path.join(dir, safe), message.html, "utf8");
       console.log(`\n📧 [mailer:console] → ${message.to} · ${message.subject}`);
-      console.log(`   ${path.join("storage", "mail", safe)}\n`);
+      console.log(`   ${path.join(".data", "mail", safe)}\n`);
     },
   };
 }
@@ -70,7 +72,23 @@ export function getMailer(): Mailer {
 const escape = (value: string) =>
   value.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
-export function emailLayout(options: { title: string; preheader?: string; body: string }) {
+/** Signature de l'atelier, relue depuis les réglages à chaque envoi. */
+async function brandSignature() {
+  const { getBrandSettings } = await import("@/server/services/settings");
+  const brand = await getBrandSettings();
+  return { name: brand.name, city: brand.city, country: brand.country };
+}
+
+export async function emailLayout(options: {
+  title: string;
+  preheader?: string;
+  body: string;
+}): Promise<string> {
+  const brand = await brandSignature().catch(() => ({
+    name: site.name,
+    city: site.address.city,
+    country: site.address.country,
+  }));
   return `<!doctype html>
 <html lang="fr">
 <head>
@@ -83,14 +101,14 @@ ${options.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opa
 <tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#FDFCF9;border:1px solid #DED7C9;">
   <tr><td style="padding:40px 40px 8px;font-family:Georgia,serif;font-size:20px;color:#100F0D;letter-spacing:0.01em;">
-    ${escape(site.name)}
+    ${escape(brand.name)}
   </td></tr>
   <tr><td style="padding:0 40px;"><div style="height:1px;background:#DED7C9;"></div></td></tr>
   <tr><td style="padding:28px 40px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#2A2723;">
     ${options.body}
   </td></tr>
   <tr><td style="padding:24px 40px 40px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#6E6862;border-top:1px solid #DED7C9;">
-    ${escape(site.name)} · ${escape(site.address.city)}, ${escape(site.address.country)}<br>
+    ${escape(brand.name)} · ${escape(brand.city)}, ${escape(brand.country)}<br>
     <a href="${site.url}" style="color:#8E7440;">${site.url.replace(/^https?:\/\//, "")}</a>
   </td></tr>
 </table>

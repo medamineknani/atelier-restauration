@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createTranslator, localePath, type Locale } from "@/lib/i18n";
 import { site } from "@/config/site";
 import { buildMetadata, breadcrumbJsonLd, jsonLdScript } from "@/lib/seo";
+import { getBrandSettings } from "@/server/services/settings";
 import { ContactForm } from "@/components/marketing/contact-form";
 import { Container, Eyebrow, Reveal, Rule, Section } from "@/components/ui/primitives";
 
@@ -27,6 +28,7 @@ export default async function ContactPage({
   const { locale } = (await params) as { locale: Locale };
   const { envoye } = await searchParams;
   const t = createTranslator(locale);
+  const brand = await getBrandSettings();
 
   const url = `${site.url}${localePath(locale, "/contact")}`;
   const jsonLd = [
@@ -72,30 +74,30 @@ export default async function ContactPage({
                   <li>
                     <span className="block text-stone">{t("contact.email")}</span>
                     <a
-                      href={`mailto:${site.email}`}
+                      href={`mailto:${brand.email}`}
                       className="text-ink transition-fast hover:text-champagne-deep"
                     >
-                      {site.email}
+                      {brand.email}
                     </a>
                   </li>
                   <li>
                     <span className="block text-stone">{t("contact.phone")}</span>
                     <a
-                      href={`tel:${site.phoneHref}`}
+                      href={`tel:${brand.phoneHref}`}
                       className="text-ink transition-fast hover:text-champagne-deep"
                     >
-                      {site.phone}
+                      {brand.phone}
                     </a>
                   </li>
                   <li>
                     <span className="block text-stone">WhatsApp</span>
                     <a
-                      href={`https://wa.me/${site.whatsapp.replace(/[^0-9]/g, "")}`}
+                      href={`https://wa.me/${brand.whatsapp.replace(/[^0-9]/g, "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-ink transition-fast hover:text-champagne-deep"
                     >
-                      {site.whatsapp}
+                      {brand.whatsapp}
                     </a>
                   </li>
                 </ul>
@@ -103,9 +105,9 @@ export default async function ContactPage({
                 <Rule className="my-8" />
 
                 <h2 className="eyebrow text-stone">{t("contact.hours")}</h2>
-                <p className="mt-4 text-[0.9375rem] text-graphite">{site.openingHours}</p>
+                <p className="mt-4 text-[0.9375rem] text-graphite">{brand.openingHours}</p>
                 <p className="mt-2 text-[0.9375rem] text-graphite">
-                  {site.address.street}, {site.address.postalCode} {site.address.city}
+                  {brand.street}, {brand.postalCode} {brand.city}
                 </p>
 
                 <Rule className="my-8" />

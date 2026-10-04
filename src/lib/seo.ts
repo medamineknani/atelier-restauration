@@ -1,5 +1,6 @@
 import { site } from "@/config/site";
 import { htmlLang, localePath, locales, ogLocale, type Locale } from "@/lib/i18n";
+import { getBrandSettings } from "@/server/services/settings";
 
 export function canonicalUrl(locale: Locale, path = "/") {
   return new URL(localePath(locale, path), site.url).toString();
@@ -54,26 +55,34 @@ export function buildMetadata(input: {
 /* Données structurées                                                         */
 /* -------------------------------------------------------------------------- */
 
-export function organizationJsonLd() {
+/**
+ * Données structurées de l'organisation.
+ *
+ * Asynchrone : les coordonnées viennent des réglages, pour que Google lise
+ * exactement ce que le site affiche. Un écart entre les deux est un motif de
+ * méfiance pour les moteurs.
+ */
+export async function organizationJsonLd() {
+  const brand = await getBrandSettings();
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": `${site.url}/#organization`,
-    name: site.name,
+    name: brand.name,
     url: site.url,
     description: site.description,
-    email: site.email,
-    telephone: site.phone,
+    email: brand.email,
+    telephone: brand.phone,
     areaServed: { "@type": "Country", name: "Tunisie" },
     address: {
       "@type": "PostalAddress",
-      streetAddress: site.address.street,
-      postalCode: site.address.postalCode,
-      addressLocality: site.address.city,
-      addressRegion: site.address.region,
-      addressCountry: site.address.country,
+      streetAddress: brand.street,
+      postalCode: brand.postalCode,
+      addressLocality: brand.city,
+      addressRegion: brand.region,
+      addressCountry: brand.country,
     },
-    sameAs: [site.social.instagram, site.social.facebook],
+    sameAs: [brand.instagram, brand.facebook].filter(Boolean),
   };
 }
 

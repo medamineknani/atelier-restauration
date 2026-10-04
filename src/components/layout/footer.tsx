@@ -1,10 +1,15 @@
 import Link from "next/link";
-import { site } from "@/config/site";
 import { createTranslator, localePath, type Locale } from "@/lib/i18n";
 import { Rule } from "@/components/ui/primitives";
+import { getBrandSettings } from "@/server/services/settings";
 
-export function Footer({ locale }: { locale: Locale }) {
+/**
+ * Le pied de page lit les coordonnées depuis la base : ce qui est affiché ici
+ * est exactement ce que l'atelier a saisi dans les réglages.
+ */
+export async function Footer({ locale }: { locale: Locale }) {
   const t = createTranslator(locale);
+  const brand = await getBrandSettings();
   const year = new Date().getFullYear();
 
   const columns = [
@@ -41,11 +46,11 @@ export function Footer({ locale }: { locale: Locale }) {
       <div className="container-editorial py-16 md:py-20">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <p className="font-display text-xl leading-snug text-ink">Atelier Restauration</p>
+            <p className="font-display text-xl leading-snug text-ink">{brand.name}</p>
             <p className="mt-4 max-w-xs text-[0.9375rem] leading-relaxed text-stone">
               {t("footer.brandLine")}
             </p>
-            <p className="mt-6 text-[0.8125rem] text-stone">{site.openingHours}</p>
+            <p className="mt-6 text-[0.8125rem] text-stone">{brand.openingHours}</p>
           </div>
 
           {columns.map((column) => (
@@ -72,14 +77,14 @@ export function Footer({ locale }: { locale: Locale }) {
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1 text-[0.8125rem] text-stone">
             <p>
-              {site.email} · {site.phone}
+              {brand.email} · {brand.phone}
             </p>
             <p>
-              {site.address.street}, {site.address.postalCode} {site.address.city}
+              {brand.street}, {brand.postalCode} {brand.city}
             </p>
           </div>
           <p className="text-[0.8125rem] text-stone">
-            © {year} {site.name}. {t("footer.rights")}
+            © {year} {brand.name}. {t("footer.rights")}
           </p>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import type { Order, OrderItem } from "@/server/db/schema";
 import { site } from "@/config/site";
 import type { Locale } from "@/lib/i18n";
+import { getBrandSettings } from "./settings";
 
 /**
  * Facture — document HTML autoportant, imprimable au format A4.
@@ -102,6 +103,8 @@ export async function renderInvoiceHtml(input: {
 }): Promise<string> {
   const { order, items, invoice, customer, locale } = input;
   const c = COPY[locale] ?? COPY.fr;
+  // Coordonnées courantes de l'atelier, telles que saisies dans les réglages.
+  const brand = await getBrandSettings();
 
   const rows = items
     .map(
@@ -178,10 +181,10 @@ export async function renderInvoiceHtml(input: {
   <div class="sheet">
     <header>
       <div>
-        <div class="brand">${site.name}<small>${site.tagline}</small></div>
+        <div class="brand">${brand.name}<small>${site.tagline}</small></div>
         <div class="meta">
-          ${site.address.street}, ${site.address.postalCode} ${site.address.city}<br />
-          ${site.email} · ${site.phone}
+          ${brand.street}, ${brand.postalCode} ${brand.city}<br />
+          ${brand.email} · ${brand.phone}
         </div>
       </div>
       <div style="text-align:end">
