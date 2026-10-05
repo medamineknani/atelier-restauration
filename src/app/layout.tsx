@@ -12,13 +12,29 @@ import "./globals.css";
  * l'interface.
  */
 const fraunces = localFont({
-  src: [
-    { path: "../fonts/fraunces.woff2", style: "normal" },
-    { path: "../fonts/fraunces-italic.woff2", style: "italic" },
-  ],
+  src: "../fonts/fraunces.woff2",
   display: "swap",
   variable: "--font-fraunces",
   preload: true,
+  fallback: ["Iowan Old Style", "Georgia", "Times New Roman", "serif"],
+});
+
+/**
+ * L'italique, lui, n'est pas préchargé.
+ *
+ * Précharger les deux graisses coûtait 343 Kio sur le chemin critique, dont
+ * 150 Kio d'italique — soit davantage que le HTML, la feuille de style et
+ * l'image d'accueil réunis. Or l'italique ne sert qu'aux citations des
+ * témoignages, en bas de la page d'accueil. Déclaré à part et non préchargé,
+ * il reste disponible : le navigateur ne le télécharge qu'en atteignant la
+ * citation, et affiche la police de repli d'ici là.
+ */
+const frauncesItalic = localFont({
+  src: "../fonts/fraunces-italic.woff2",
+  style: "italic",
+  display: "swap",
+  variable: "--font-fraunces-italic",
+  preload: false,
   fallback: ["Iowan Old Style", "Georgia", "Times New Roman", "serif"],
 });
 
@@ -53,7 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang={htmlLang[locale]}
       dir={isRtl(locale) ? "rtl" : "ltr"}
-      className={`${fraunces.variable} ${inter.variable}`}
+      className={`${fraunces.variable} ${frauncesItalic.variable} ${inter.variable}`}
     >
       <body className="bg-paper text-ink antialiased">{children}</body>
     </html>

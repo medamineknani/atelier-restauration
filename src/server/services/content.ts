@@ -34,6 +34,7 @@ export type TransformationCard = {
   afterThumb: string | null;
   blurBefore: string | null;
   blurAfter: string | null;
+  createdAt: Date;
   width: number;
   height: number;
 };
@@ -46,6 +47,7 @@ export async function getTransformations(locale: Locale, category?: string) {
       category: transformations.category,
       isFeatured: transformations.isFeatured,
       sortOrder: transformations.sortOrder,
+      createdAt: transformations.createdAt,
       title: transformationTranslations.title,
       workDescription: transformationTranslations.workDescription,
       altBefore: transformationTranslations.altBefore,
@@ -109,6 +111,7 @@ export async function getTransformations(locale: Locale, category?: string) {
       afterThumb: m.after?.thumbKey ?? null,
       blurBefore: m.before?.blurPlaceholder ?? null,
       blurAfter: m.after?.blurPlaceholder ?? null,
+      createdAt: row.createdAt,
       width: m.after?.width ?? 1400,
       height: m.after?.height ?? 934,
     } satisfies TransformationCard;

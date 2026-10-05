@@ -72,12 +72,16 @@ function entry(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
-
   const entries: MetadataRoute.Sitemap = [];
+
+  // `lastModified` est omis sur les pages éditoriales : rien ne permet de
+  // dater leur dernière modification réelle. Renseigner l'heure du build les
+  // ferait toutes paraître neuves à chaque déploiement, ce qui pousse les
+  // moteurs à tout réexplorer pour rien et rend la date inopérante. Mieux
+  // vaut pas de date qu'une date fausse.
   for (const page of STATIC_PAGES) {
     for (const locale of activeLocales) {
-      entries.push(entry(page.path, locale, now, page.changeFrequency, page.priority));
+      entries.push(entry(page.path, locale, undefined, page.changeFrequency, page.priority));
     }
   }
 
@@ -88,8 +92,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const item of transformations) {
     if (!item.slug) continue;
     const path = `/galerie/${item.slug}`;
+    // Celles-là sont datées : la fiche est créée une fois pour toutes, la
+    // date de création est donc une approximation honnête de lastmod.
+    const lastModified = item.createdAt;
     for (const locale of activeLocales) {
-      entries.push(entry(path, locale, now, "monthly", 0.6));
+      entries.push(entry(path, locale, lastModified, "monthly", 0.6));
     }
   }
 

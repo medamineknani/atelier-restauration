@@ -734,5 +734,8 @@
   },
   "order": {
     "estimatedReady": "Estimated delivery: {date}"
+  },
+  "devis": {
+    "lede": "Beyond a hundred photographs, or for an entire archive, we work to quote. Tell us what you have and we will come back to you with a price and a timeframe."
   }
 }

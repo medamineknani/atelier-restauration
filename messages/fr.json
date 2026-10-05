@@ -734,5 +734,8 @@
   },
   "order": {
     "estimatedReady": "Livraison estimée : {date}"
+  },
+  "devis": {
+    "lede": "Au-delà de cent photographies, ou pour un fonds ancien, nous travaillons sur devis. Dites-nous ce que vous avez : nous revenons vers vous avec un prix et un délai."
   }
 }

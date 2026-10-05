@@ -92,9 +92,9 @@ function shutdown(code: number) {
 
 if (globalForDb.__atelierPglite && !globalForDb.__atelierDbShutdownHooked) {
   globalForDb.__atelierDbShutdownHooked = true;
-  // `beforeExit` couvre les arrêts sans signal ; les deux signaux couvrent
-  // Ctrl-C et l'arrêt demandé par l'outil ou l'hébergeur.
-  process.once("beforeExit", shutdown(0));
+  // Uniquement sur signal. `beforeExit` serait une maladresse grave : Node
+  // l'émet dès que la boucle d'événements se vide, ce qui arrive à un serveur
+  // même en pleine activité — on l'a vu couper net un parcours au milieu.
   process.once("SIGINT", shutdown(130));
   process.once("SIGTERM", shutdown(143));
 }

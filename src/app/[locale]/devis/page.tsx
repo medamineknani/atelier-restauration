@@ -18,7 +18,9 @@ export async function generateMetadata({
     locale,
     path: "/devis",
     title: locale === "en" ? "Request a tailor-made quote" : "Demander un devis sur mesure",
-    description: t("contact.lede"),
+    // Sa propre description : reprise telle quelle de la page de contact, le
+    // moteur voyait deux pages se disputer la même requête.
+    description: t("devis.lede"),
   });
 }
 

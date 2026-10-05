@@ -17,6 +17,7 @@
     "e2e:admin": "python3 scripts/e2e-admin.py",
     "e2e:compte": "python3 scripts/e2e-compte.py",
     "e2e:cod": "python3 scripts/e2e-cod.py",
+    "e2e:seo": "python3 scripts/e2e-seo.py",
     "gallery": "tsx scripts/build-gallery.ts",
     "images": "tsx scripts/build-public-images.ts",
     "lint": "eslint .",
@@ -24,7 +25,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "e2e:all": "npm run e2e && npm run e2e:compte && npm run e2e:admin && npm run e2e:cod"
+    "e2e:all": "npm run e2e && npm run e2e:compte && npm run e2e:admin && npm run e2e:cod && npm run e2e:seo"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.8",

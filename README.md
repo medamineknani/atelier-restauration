@@ -101,6 +101,7 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
 | `npm run e2e:compte`    | Espace client : lien magique, rattachement, facture...  |
 | `npm run e2e:admin`     | Back-office : commande, catalogue, contenu, réglages    |
 | `npm run e2e:cod`       | Paiement à la livraison : éligibilité, encaissement     |
+| `npm run e2e:seo`       | Référencement : plan du site, balises, liens, JSON-LD   |
 | `npm run e2e:all`       | Les quatre parcours, à la suite                         |
 
 ### Trois précautions locales
@@ -173,6 +174,70 @@ navigateur, et ces points sont verrouillés par des tests.
 Restent à auditer avec un lecteur d'écran réel et un navigateur : les messages
 d'erreur de formulaire (annonce et rattachement aux champs), les régions
 `aria-live` pendant les téléversements, et le parcours complet au clavier.
+
+### Performance
+
+Mesuré sur un build de production (`npm run build && npm run start`), les
+chiffres du mode développement n'étant pas représentatifs.
+
+| Poste                        | Accueil            |
+| ---------------------------- | ------------------ |
+| HTML                         | 26 Kio             |
+| Feuille de style             | 11 Kio             |
+| Javascript (React + Next)    | 183 Kio            |
+| Images chargées d'emblée     | 20 Kio             |
+| Images en différé            | 501 Kio            |
+
+Dépendances volontairement réduites à React, Next, Drizzle, Zod et Sharp :
+ni librairie d'animation, ni librairie de dates, ni kit d'interface. Les
+183 Kio de Javascript sont donc pour l'essentiel le socle React et Next.
+
+Les images passent par l'optimiseur de Next, en AVIF puis WebP : 23 Kio
+au lieu de 47 Kio en JPEG à largeur égale. Les fichiers originaux sont servis
+avec `max-age=31536000, immutable`, et les images optimisées avec un cache
+d'un an. Une seule image est chargée d'emblée — celle de l'accueil, en
+`priority` — les treize autres sont différées.
+
+**Le poids des polices a été divisé par deux sur le chemin critique.** Les
+trois fichiers étaient préchargés, soit 343 Kio, dont 150 Kio d'italique pour
+les seules citations des témoignages. L'italique est désormais déclaré à part
+et non préchargé : 189 Kio au démarrage, et l'italique n'arrive qu'en
+atteignant la citation. Il faut le nommer explicitement, sinon le navigateur
+se contente de pencher le romain.
+
+### Référencement
+
+`npm run e2e:seo` parcourt le site comme le ferait un moteur et vérifie : le
+plan du site (toutes les URL répondent, aucune date de modification
+uniforme), l'exclusion du back-office et de l'espace client dans
+`robots.txt`, l'absence de lien interne cassé, un titre et une description
+propres à chaque page, un `canonical` qui se réfère à la page elle-même, la
+présence de `hreflang` dont `x-default`, et des données structurées en JSON
+valide.
+
+Deux choses trouvées et corrigées ainsi :
+
+- Le plan du site datait les 52 URL de l'heure du build. Tout paraissait neuf
+  à chaque déploiement, ce qui pousse les moteurs à tout réexplorer et rend
+  la date inopérante. Les pages éditoriales n'ont plus de date, et les fiches
+  galerie portent leur date réelle.
+- `/contact` et `/devis` partageaient la même description : deux pages qui se
+  disputaient la même requête sans que le moteur puisse les départager.
+
+Les longueurs de titres et de descriptions sont rapportées sans faire échouer
+la suite, parce que c'est de la rédaction. À reprendre, les plus éloignées du
+compte :
+
+| Page                        | Ce qui dépasse                    |
+| --------------------------- | --------------------------------- |
+| `/`                         | titre de 90 caractères            |
+| `/restauration-photo`       | titre de 76                       |
+| `/confidentialite`          | titre de 71                       |
+| `/politique-confidentialite`| description de 223                |
+| `/galerie/medina-1957`      | description de 199                |
+| `/conditions-vente`         | description de 197                |
+| `/photobooks`               | description de 184                |
+| `/tarifs`                   | description de 54                 |
 
 ### Tunnel de commande
 
