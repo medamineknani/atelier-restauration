@@ -654,6 +654,84 @@ const GALLERY_META: Record<string, { category: string; sort: number; featured: b
       "Original file at very low resolution, orange cast, chroma noise. High-resolution upscaling, cast correction, chroma denoising.",
     ],
   },
+  "portrait-homme-1935": {
+    category: "portrait",
+    sort: 7,
+    featured: false,
+    fr: [
+      "Portrait d'homme, 1935",
+      "Miroitement argentique sur le visage, pliure verticale au centre, jaunissement général. Dépoussiérage, correction du voile jaune, reprise des contours du visage.",
+    ],
+    en: [
+      "Portrait of a man, 1935",
+      "Silver mirroring across the face, a vertical crease down the centre, overall yellowing. Dust removal, correction of the yellow cast, recovery of the facial contours.",
+    ],
+  },
+  "noces-1952": {
+    category: "mariage",
+    sort: 8,
+    featured: false,
+    fr: [
+      "Noces, 1952",
+      "Déchirure recollée au tiers inférieur, taches de moisissure sur la robe, contraste effondré. Raccord numérique, atténuation des taches, reconstruction du voile.",
+    ],
+    en: [
+      "Wedding, 1952",
+      "A tear repaired across the lower third, mould spots on the dress, collapsed contrast. Digital rejoin, spot reduction, reconstruction of the veil.",
+    ],
+  },
+  "deux-freres-1948": {
+    category: "enfance",
+    sort: 9,
+    featured: false,
+    fr: [
+      "Deux frères, 1948",
+      "Coin inférieur gauche manquant, rayures diagonales sur le mur, émulsion craquelée. Reconstruction du coin, effacement des rayures, stabilisation des craquelures.",
+    ],
+    en: [
+      "Two brothers, 1948",
+      "Lower left corner missing, diagonal scratches across the wall, cracked emulsion. Corner reconstruction, scratch removal, stabilisation of the crazing.",
+    ],
+  },
+  "place-du-marche-1961": {
+    category: "nb",
+    sort: 10,
+    featured: false,
+    fr: [
+      "Place du marché, 1961",
+      "Tirage sous-exposé, détail noyé dans les ombres, poussière incrustée. Ouverture des ombres, débruitage, netteté locale sur les étals.",
+    ],
+    en: [
+      "Market square, 1961",
+      "Under-exposed print, detail lost in the shadows, ingrained dust. Shadow recovery, noise reduction, local sharpening on the stalls.",
+    ],
+  },
+  "soldat-1943": {
+    category: "nb",
+    sort: 11,
+    featured: false,
+    fr: [
+      "Soldat, 1943",
+      "Forte décoloration, annotations au crayon du verso repassées au recto, bords effrangés. Restitution des gris, effacement des reprises, recadrage net.",
+    ],
+    en: [
+      "Soldier, 1943",
+      "Heavy fading, pencil notes from the back showing through, frayed edges. Restoration of the greys, removal of the show-through, clean reframe.",
+    ],
+  },
+  "famille-reunie-1959": {
+    category: "famille",
+    sort: 12,
+    featured: true,
+    fr: [
+      "Famille réunie, 1959",
+      "Tirage plié en quatre, cassure traversant les visages, matière manquante aux plis. Reconstruction des visages coupés, atténuation des cassures, harmonisation des gris.",
+    ],
+    en: [
+      "Family gathered, 1959",
+      "Print folded in four, the crease running across the faces, material lost at the folds. Reconstruction of the severed faces, softening of the creases, harmonisation of the greys.",
+    ],
+  },
 };
 
 /* -------------------------------------------------------------------------- */

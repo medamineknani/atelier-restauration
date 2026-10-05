@@ -28,7 +28,7 @@ export async function generateMetadata({
     path: "/photobooks",
     title: t("home.photobooks.title"),
     description: t("home.photobooks.lede"),
-    image: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/images/photobook-premium.jpg`,
+    image: "/images/photobook-premium.jpg",
   });
 }
 

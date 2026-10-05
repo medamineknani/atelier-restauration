@@ -25,7 +25,7 @@ export async function generateMetadata({
     path: `/galerie/${slug}`,
     title: item.title,
     description: item.workDescription,
-    image: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/gallery/${item.id}/after`,
+    image: `/api/gallery/${item.id}/after`,
   });
 }
 

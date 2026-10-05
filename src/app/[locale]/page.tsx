@@ -3,7 +3,16 @@ import type { Metadata } from "next";
 import { createTranslator, localePath, raw, type Locale } from "@/lib/i18n";
 import { getPacks } from "@/server/services/catalog";
 import { getFaqs, getTestimonials, getTransformations } from "@/server/services/content";
-import { buildMetadata, faqJsonLd, howToJsonLd, jsonLdScript, organizationJsonLd, productJsonLd, websiteJsonLd } from "@/lib/seo";
+import {
+  buildMetadata,
+  canonicalUrl,
+  faqJsonLd,
+  howToJsonLd,
+  jsonLdScript,
+  organizationJsonLd,
+  productJsonLd,
+  websiteJsonLd,
+} from "@/lib/seo";
 import { Container, Section, SectionHeading, Reveal } from "@/components/ui/primitives";
 import { ArrowIcon } from "@/components/ui/primitives";
 import { Hero } from "@/components/marketing/hero";
@@ -36,7 +45,7 @@ export async function generateMetadata({
         ? "Photo restoration & premium photobooks — Tunisia"
         : "Restauration de photos anciennes & photobooks premium — Tunisie",
     description: t("home.hero.lede"),
-    image: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/images/hero-atelier.jpg`,
+    image: "/images/hero-atelier.jpg",
   });
 }
 
@@ -68,7 +77,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         name: pack.name,
         description: pack.tagline ?? pack.name,
         priceMillimes: pack.priceMillimes,
-        url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}${localePath(locale, "/tarifs")}`,
+        url: canonicalUrl(locale, "/tarifs"),
       }),
     ),
   ];

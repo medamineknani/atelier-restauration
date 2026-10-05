@@ -95,6 +95,7 @@ Le seed crée un compte administrateur : `admin@atelier-restauration.tn` /
 | `npm run test`          | Tests unitaires (Vitest)                                   |
 | `npm run test:watch`    | Tests unitaires, relancés à chaque enregistrement          |
 | `npm run db:generate`   | Génère une migration après modification du schéma          |
+| `npm run images`        | Régénère hero, image de partage et icônes depuis `assets/brand` |
 | `npm run gallery`       | Reconstruit les paires avant/après de la galerie           |
 | `npm run db:reset`      | Repart de zéro : base + stockage, puis migre et sème       |
 | `npm run e2e`           | Parcours de commande complet, sans navigateur           |
@@ -244,6 +245,28 @@ Reste cinq écarts, qui sont de vrais choix de texte :
 Les titres longs viennent du suffixe de marque ajouté à chaque page ; les
 descriptions courtes sont des pages qui gagneraient à en dire plus — `/tarifs`
 surtout, qui est une page qui vend.
+
+### Marque et médias
+
+Les images de marque vivent dans `assets/brand` : le hero, le photobook,
+l'image de partage et la source de l'icône. `npm run images` en dérive tout le
+reste : les trois formats (AVIF, WebP, JPEG de repli) dans `public/images`,
+l'image de partage recadrée en 1200×630, et les icônes — `src/app/icon.png`
+(32 px), `src/app/apple-icon.png` (180 px) et `public/favicon.ico`. Les icônes
+sont régénérées depuis la source à chaque passage du script ; on ne les édite
+jamais à la main.
+
+`assets/brand` et `assets/sources` sont volontairement séparés :
+`npm run gallery` balaie `assets/sources` pour fabriquer les entrées de la
+galerie. Si le hero y vivait, il deviendrait une restauration.
+
+Chaque page déclare une `og:image` — l'image de partage par défaut à défaut de
+la sienne —, résolue contre `site.url`. Un lien partagé affiche donc toujours
+une carte, jamais un rectangle vide.
+
+La galerie compte douze paires avant/après, construites par `npm run gallery`
+à partir des tirages d'époque de `assets/sources` : la dégradation (taches,
+rayures, décoloration) est déterministe, le même source redonne la même paire.
 
 ### Tunnel de commande
 

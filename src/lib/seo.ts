@@ -36,6 +36,25 @@ export function truncateDescription(text: string, limit = 160): string {
   return `${cut.slice(0, end).trimEnd()}…`;
 }
 
+/**
+ * Image de partage par défaut, 1200×630, présente dans public/images.
+ *
+ * Un lien partagé sans image produit une carte vide sur les réseaux et dans
+ * les messageries : c'est la première impression, autant ne pas la laisser
+ * au hasard d'une page qui aurait oublié la sienne.
+ */
+const DEFAULT_OG_IMAGE = "/images/og-atelier.jpg";
+
+/**
+ * Les cartes de partage exigent une URL absolue : le réseau qui affiche la
+ * carte ne va pas chercher l'image sur notre domaine, il l'affiche depuis
+ * l'URL fournie. On la résout contre `site.url`, source de vérité unique,
+ * plutôt qu'une variable d'environnement qu'on est sûr d'oublier en prod.
+ */
+function absoluteImage(image: string) {
+  return new URL(image, site.url).toString();
+}
+
 export function buildMetadata(input: {
   locale: Locale;
   path: string;
@@ -47,6 +66,7 @@ export function buildMetadata(input: {
 }) {
   const canonical = canonicalUrl(input.locale, input.path);
   const description = truncateDescription(input.description);
+  const image = absoluteImage(input.image ?? DEFAULT_OG_IMAGE);
 
   return {
     title: input.title,
@@ -62,13 +82,13 @@ export function buildMetadata(input: {
       locale: ogLocale[input.locale],
       title: input.title,
       description,
-      images: input.image ? [{ url: input.image, width: 1200, height: 630 }] : undefined,
+      images: [{ url: image, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image" as const,
       title: input.title,
       description,
-      images: input.image ? [input.image] : undefined,
+      images: [image],
     },
     robots: input.noIndex ? { index: false, follow: false } : { index: true, follow: true },
   };
