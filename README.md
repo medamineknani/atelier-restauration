@@ -225,19 +225,25 @@ Deux choses trouvées et corrigées ainsi :
   disputaient la même requête sans que le moteur puisse les départager.
 
 Les longueurs de titres et de descriptions sont rapportées sans faire échouer
-la suite, parce que c'est de la rédaction. À reprendre, les plus éloignées du
-compte :
+la suite, parce que c'est de la rédaction. Les descriptions trop longues ont
+été réglées mécaniquement : `truncateDescription` coupe à 160 caractères sur
+un espace, avec une ellipse, plutôt que de laisser le moteur couper au milieu
+d'un mot. Elles venaient du contenu — descriptif d'une restauration, premier
+paragraphe d'une page légale — et non d'un choix de rédaction.
 
-| Page                        | Ce qui dépasse                    |
-| --------------------------- | --------------------------------- |
-| `/`                         | titre de 90 caractères            |
-| `/restauration-photo`       | titre de 76                       |
-| `/confidentialite`          | titre de 71                       |
-| `/politique-confidentialite`| description de 223                |
-| `/galerie/medina-1957`      | description de 199                |
-| `/conditions-vente`         | description de 197                |
-| `/photobooks`               | description de 184                |
-| `/tarifs`                   | description de 54                 |
+Reste cinq écarts, qui sont de vrais choix de texte :
+
+| Page                  | Ce qui dépasse         |
+| --------------------- | ---------------------- |
+| `/`                   | titre de 86 caractères |
+| `/restauration-photo` | titre de 76            |
+| `/confidentialite`    | titre de 71            |
+| `/tarifs`             | description de 54      |
+| `/a-propos`           | description de 61      |
+
+Les titres longs viennent du suffixe de marque ajouté à chaque page ; les
+descriptions courtes sont des pages qui gagneraient à en dire plus — `/tarifs`
+surtout, qui est une page qui vend.
 
 ### Tunnel de commande
 

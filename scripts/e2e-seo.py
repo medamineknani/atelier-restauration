@@ -22,6 +22,7 @@ sont des recommandations, pas des erreurs. Elles sont rapportées à part.
 
 from __future__ import annotations
 
+import html
 import json
 import re
 import subprocess
@@ -53,8 +54,13 @@ def fetch(path: str) -> tuple[int, str]:
 
 
 def tag(body: str, pattern: str) -> str:
+    """Relève une balise.
+
+    Les entités sont décodées : `&#x27;` compte pour un caractère à l'écran,
+    pas pour six. Sans cela on annoncerait des longueurs fausses.
+    """
     found = re.search(pattern, body, re.S)
-    return found.group(1).strip() if found else ""
+    return html.unescape(found.group(1)).strip() if found else ""
 
 
 # ---------------------------------------------------------------------------

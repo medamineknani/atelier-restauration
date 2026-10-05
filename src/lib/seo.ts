@@ -15,6 +15,27 @@ export function hreflangAlternates(path: string) {
   return languages;
 }
 
+/**
+ * Raccourcit une description à la longueur qu'affichent les moteurs.
+ *
+ * Certaines descriptions ne sont pas rédigées pour le référencement : elles
+ * viennent du contenu — le descriptif d'une restauration, le premier
+ * paragraphe d'une page légale. Au-delà d'environ 160 caractères, le moteur
+ * coupe lui-même, au milieu d'un mot. Autant couper proprement, sur un espace
+ * et avec une ellipse.
+ */
+export function truncateDescription(text: string, limit = 160): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= limit) return clean;
+
+  const cut = clean.slice(0, limit);
+  const lastSpace = cut.lastIndexOf(" ");
+  // Couper au dernier mot entier, sauf si cela raccourcit trop : un texte
+  // sans espace doit quand même être rendu.
+  const end = lastSpace > limit * 0.6 ? lastSpace : limit;
+  return `${cut.slice(0, end).trimEnd()}…`;
+}
+
 export function buildMetadata(input: {
   locale: Locale;
   path: string;
@@ -25,9 +46,11 @@ export function buildMetadata(input: {
   noIndex?: boolean;
 }) {
   const canonical = canonicalUrl(input.locale, input.path);
+  const description = truncateDescription(input.description);
+
   return {
     title: input.title,
-    description: input.description,
+    description,
     alternates: {
       canonical,
       languages: hreflangAlternates(input.path),
@@ -38,13 +61,13 @@ export function buildMetadata(input: {
       siteName: site.name,
       locale: ogLocale[input.locale],
       title: input.title,
-      description: input.description,
+      description,
       images: input.image ? [{ url: input.image, width: 1200, height: 630 }] : undefined,
     },
     twitter: {
       card: "summary_large_image" as const,
       title: input.title,
-      description: input.description,
+      description,
       images: input.image ? [input.image] : undefined,
     },
     robots: input.noIndex ? { index: false, follow: false } : { index: true, follow: true },
