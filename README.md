@@ -400,11 +400,34 @@ pour qu'un prestataire qui réessaie en boucle ne finisse pas par nous noyer.
 
 ## Décisions en attente de validation
 
-Voir la section « Questions ouvertes » du document de synthèse, et les arbitrages à confirmer avant le jalon M0 :
+Deux points restent ouverts. Ils concernent l'un et l'autre le
+contre-remboursement, et dépendent du transporteur que vous retiendrez.
 
-- nom définitif de la marque ;
-- transporteur et frais de contre-remboursement : facturés au client ou
-  absorbés ? C'est une colonne à ajouter à la commande, ce n'est pas fait ;
-- plafond de contre-remboursement pratiqué par le transporteur retenu ;
-- hébergeur et stockage cibles ;
-- tarifs des trois extras numériques (proposés : 4 / 25 / 15 DT).
+1. **Frais de contre-remboursement : facturés au client, ou absorbés par
+   l'atelier ?** Rien n'est prévu aujourd'hui pour les porter : c'est une
+   colonne à ajouter à la commande, puis à reprendre dans le calcul du montant
+   et sur la facture.
+2. **Plafond de contre-remboursement pratiqué par le transporteur.** Le
+   réglage existe (`payment_cod_max_millimes`, dans les paramètres du
+   back-office, 0 = sans plafond), mais la valeur à y mettre dépend du
+   transporteur.
+
+Ces deux réponses sont liées : le plafond vient du transporteur, et les frais
+aussi. Les trancher ensemble évite d'y revenir deux fois.
+
+## Déjà tranché
+
+Pour mémoire, les points ouverts des phases précédentes sont réglés et
+intégrés : marque **Atelier Restauration** ; hébergement **Vercel + Postgres
+managé + S3 en Europe** ; tarifs des extras numériques, semés à **4 / 25 /
+15 DT** (photo supplémentaire, retouche complexe, colorisation).
+
+## Hors périmètre
+
+- **Paiement en ligne** (Konnect, Flouci, D17). Non entrepris : le marché
+  tunisien reste majoritairement au paiement à la livraison et au virement.
+  L'abstraction est en place pour l'ajouter sans toucher au tunnel.
+- **Arabe.** L'infrastructure est prête — `locales`, tables de traduction,
+  sens de lecture, `hreflang` — mais `messages/ar.json` reste à écrire. Tant
+  qu'il n'existe pas, `/ar` répond 404 et l'arabe ne figure pas dans le plan
+  du site.
