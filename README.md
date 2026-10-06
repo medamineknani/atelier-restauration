@@ -421,6 +421,61 @@ pour qu'un prestataire qui réessaie en boucle ne finisse pas par nous noyer.
 
 ---
 
+## Déployer
+
+`main` est autonome : code, médias, migrations et seed sont versionnés. Les
+trois groupes ignorés — `node_modules/`, `.next/`, `.data/` — ne sont pas du
+contenu : ce sont des artefacts que les commandes ci-dessous régénèrent. Un
+clone neuf de `main` suffit à déployer.
+
+### Prérequis
+
+- Node ≥ 22 ;
+- soit un hôte avec disque persistant (VPS) — aucun autre service requis, la
+  base embarquée et le stockage local suffisent ;
+- soit, pour un hôte sans disque persistant (Vercel, serverless) : un Postgres
+  managé (`DATABASE_URL`) et un stockage objet (`STORAGE_DRIVER=s3` avec ses
+  identifiants). Le système de fichiers d'une fonction serverless est
+  éphémère : `.data/pg` et `.data/files` n'y survivraient pas.
+
+### Variables d'environnement
+
+Partir de `.env.example`. En production, régler au minimum :
+`NEXT_PUBLIC_SITE_URL`, `APP_SECRET` (`openssl rand -hex 32`), `CRON_SECRET`,
+`SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` pour le premier démarrage — et,
+selon l'hôte, `DATABASE_URL`, les identifiants S3, `RESEND_API_KEY`.
+
+### Mise en service initiale
+
+```
+npm ci
+npm run db:reset   # migrations + galerie + seed (base locale ou distante)
+npm run build
+npm run start
+```
+
+Avec `DATABASE_URL` et `STORAGE_DRIVER=s3`, `db:reset` migre la base distante,
+construit les paires avant/après et les téléverse ; le `rm -rf .data` ne
+concerne que le cache local.
+
+### Redémarrages suivants
+
+`npm run build && npm run start`. Ne **pas** rejouer `db:reset` : il vide les
+tables et ressème — c'est un outil de première mise en service et de
+réparation, pas un redémarrage.
+
+### Tâche planifiée
+
+Les emails partent par `POST /api/jobs/run`, en-tête
+`authorization: Bearer $CRON_SECRET`. À appeler périodiquement (Vercel Cron,
+ou n'importe quel cron : toutes les cinq minutes convient).
+
+### Vérification après déploiement
+
+Une page peut répondre `200` avec des valeurs par défaut même si la base est
+muette. Contrôler un contenu semé : les prix en DT sur `/tarifs`, les douze
+légendes sur `/galerie`.
+
 ## Décisions en attente de validation
 
 Deux points restent ouverts. Ils concernent l'un et l'autre le
