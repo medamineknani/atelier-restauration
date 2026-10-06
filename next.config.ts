@@ -20,7 +20,15 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-Frame-Options", value: "DENY" },
+          // Contre le clickjacking, sans pour autant casser l'aperçu : le site
+          // peut être encadré par lui-même (production) et par la
+          // prévisualisation de l'environnement de travail (*.e2b.app).
+          // `frame-ancestors` remplace X-Frame-Options, trop binaire : DENY
+          // rendait la prévisualisation blanche.
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self' https://*.e2b.app https://*.vercel.app",
+          },
           {
             key: "Permissions-Policy",
             value: "camera=(self), microphone=(), geolocation=(), interest-cohort=()",
